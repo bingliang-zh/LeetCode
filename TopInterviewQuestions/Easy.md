@@ -7,6 +7,11 @@
   - [Contains Duplicate](#contains-duplicate)
   - [Single Number](#single-number)
   - [Intersection of Two Arrays II](#intersection-of-two-arrays-ii)
+  - [Plus One](#plus-one)
+  - [Move Zeroes](#move-zeroes)
+  - [Two Sum](#two-sum)
+  - [Valid Sudoku](#valid-sudoku)
+  - [Rotate Image](#rotate-image)
 
 ## Array
 
@@ -224,9 +229,237 @@ function singleNumber(nums: number[]): number {
 
 ### Intersection of Two Arrays II
 
-> Given two arrays, write a function to compute their intersection.
+> Given two arrays, write a function to compute their intersection.  
+Note:  
+Each element in the result should appear as many times as it shows in both arrays.  
+The result can be in any order.  
+Follow up:  
+What if the given array is already sorted? How would you optimize your algorithm?  
+What if nums1's size is small compared to nums2's size? Which algorithm is better?  
+What if elements of nums2 are stored on disk, and the memory is limited such that you cannot load all elements into the memory at once?  
+
+Solution: Solution to the common case is given below. If the given array is sorted, then simply convert it to a Map with <value, count>, merge two maps but the count uses the lesser one's but > 0, and convert the result to an array.
 
 ```typescript
 // typescript
+function intersect(_nums1: number[], _nums2: number[]): number[] {
+    const result = Array<number>();
 
+    const flag = _nums1.length < _nums2.length;
+
+    const nums1 = flag ? _nums1 : _nums2;
+    const nums2 = flag ? _nums2 : _nums1;
+
+    while (nums1.length > 0 && nums2.length > 0) {
+        const index2 = nums2.indexOf(nums1[0]);
+        
+        if (index2 > -1) {
+            // found
+            result.push(nums1[0]);
+            if (nums1.length > 1) {
+                nums1[0] = nums1.pop();
+            } else {
+                nums1.pop();
+            }
+            if (index2 !== nums2.length - 1) {
+                nums2[index2] = nums2.pop();
+            } else {
+                nums2.pop();
+            }
+        } else {
+            if (nums1.length > 1) {
+                nums1[0] = nums1.pop();
+            } else {
+                nums1.pop();
+            }
+        }
+    }
+    return result;
+};
+```
+
+### Plus One
+
+> Given a non-empty array of decimal digits representing a non-negative integer, increment one to the integer.
+
+The digits are stored such that the most significant digit is at the head of the list, and each element in the array contains a single digit.
+
+You may assume the integer does not contain any leading zero, except the number 0 itself.
+
+```typescript
+// typescript
+function plusOne(digits: number[]): number[] {
+    if (digits[digits.length - 1] !== 9) {
+        digits[digits.length - 1] ++;
+        return digits;
+    }
+
+    let non9Index = -1;
+
+    // this for and fill could be executed in one pass
+    for (let i = digits.length - 1; i >= 0; i--) {
+        if (digits[i] !== 9) {
+            non9Index = i;
+            break;
+        }
+    }
+
+    if (non9Index === -1) {
+        digits.fill(0);
+        digits[0] = 1;
+        digits.push(0);
+    } else {
+        digits.fill(0, non9Index + 1);
+        digits[non9Index] ++;
+    }
+    return digits;
+};
+```
+
+### Move Zeroes
+
+> Given an array nums, write a function to move all 0's to the end of it while maintaining the relative order of the non-zero elements.
+
+```typescript
+// typescript
+function moveZeroes(nums: number[]): void {
+    for (let searchIndex = 0, homeIndex = -1; searchIndex < nums.length; searchIndex++) {
+        if (homeIndex === -1 && nums[searchIndex] === 0) {
+            homeIndex = searchIndex;
+            continue;
+        }
+
+        if (nums[searchIndex] === 0) {
+            continue;
+        }
+
+        if (homeIndex !== -1) {
+            nums[homeIndex] = nums[searchIndex];
+            nums[searchIndex] = 0;
+            homeIndex++;
+        }
+    }
+};
+```
+
+### Two Sum
+
+> Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.  
+You may assume that each input would have exactly one solution, and you may not use the same element twice.  
+You can return the answer in any order.  
+
+Hint: search, not add and compare.
+
+```typescript
+// typescript
+function twoSum(nums: number[], sum: number): number[] {
+    for (let i = 0; i < nums.length; i++) {
+        const target = sum - nums[i];
+        const targetIndex = nums.indexOf(target, i + 1);
+        if (targetIndex > -1) {
+            return [i, targetIndex];
+        }
+    }
+};
+
+```
+
+### Valid Sudoku
+
+> Determine if a 9 x 9 Sudoku board is valid. Only the filled cells need to be validated according to the following rules:  
+Each row must contain the digits 1-9 without repetition.  
+Each column must contain the digits 1-9 without repetition.  
+Each of the nine 3 x 3 sub-boxes of the grid must contain the digits 1-9 without repetition.  
+Note:  
+A Sudoku board (partially filled) could be valid but is not necessarily solvable.  
+Only the filled cells need to be validated according to the mentioned rules.  
+
+My response: the official solution of this question looks boring to me.
+
+```typescript
+// typescript
+// Leetcode thinks this is wrong
+// Failed test case:
+// Input:
+// [["8",".","3",".",".",".",".",".","."],[".",".",".",".",".",".",".","2","."],[".","1",".",".",".",".",".","7","."],["1",".",".",".",".",".",".",".","3"],[".",".",".",".",".","2",".",".","."],[".",".",".",".",".","3",".",".","."],[".",".",".",".","6",".",".",".","."],["9",".",".",".",".",".","6",".","."],[".",".","1",".",".","4",".",".","."]]
+// Output:
+// false
+// Expected:
+// true
+// But my compiler returned true with this input.
+function isValidSudoku(board: string[][]): boolean {
+    for (let i = 0; i < 9; i++) {
+        if (!isValid(...board[i])) {
+            return false;
+        }
+        if (!isValid(
+            board[0][i], board[1][i], board[2][i],
+            board[3][i], board[4][i], board[5][i],
+            board[6][i], board[7][i], board[8][i]
+        )) {
+            return false;
+        }
+        const a = Math.floor(i / 3) * 3;
+        const b = i % 3 * 3;
+        if (!isValid(
+            board[0 + b][0 + a], board[0 + b][1 + a], board[0 + b][2 + a], 
+            board[1 + b][0 + a], board[1 + b][1 + a], board[1 + b][2 + a], 
+            board[2 + b][0 + a], board[2 + b][1 + a], board[2 + b][2 + a],
+        )) {
+            return false;
+        }
+    }
+    return true;
+};
+
+const set = new Set<number>();
+
+function isValid(...items: string[]): boolean {
+    for (let i = 0; i < items.length; i++) {
+        if (items[i][0] === '.') {
+            continue;
+        }
+        const current = Number(items[i][0]);
+        if (set.has(current)) {
+            return false;
+        } else {
+            set.add(current)
+        }
+    }
+    set.clear();
+    return true;
+}
+
+```
+
+### Rotate Image
+
+> You are given an n x n 2D matrix representing an image, rotate the image by 90 degrees (clockwise).  
+You have to rotate the image in-place, which means you have to modify the input 2D matrix directly. DO NOT allocate another 2D matrix and do the rotation.  
+
+Solution: flip twice
+
+```typescript
+// typescript
+function rotate(matrix: number[][]): void {
+    const k = matrix.length;
+
+    // flip along diagonal
+    for (let i = 0; i < k; i++) {
+        for (let j = i; j < k; j++) {
+            const temp = matrix[i][j];
+            matrix[i][j] = matrix[j][i];
+            matrix[j][i] = temp;
+        }
+    }
+
+    // flip vertically
+    for (let i = 0; i < k / 2; i++) {
+        for (let j = 0; j < k; j++) {
+            const temp = matrix[j][i];
+            matrix[j][i] = matrix[j][k - 1 - i];
+            matrix[j][k - 1 - i] = temp;
+        }
+    }
+};
 ```
