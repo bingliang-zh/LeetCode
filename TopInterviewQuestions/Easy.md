@@ -22,6 +22,13 @@
   - [Implement strStr()](#implement-strstr)
   - [Count and Say](#count-and-say)
   - [Longest Common Prefix](#longest-common-prefix)
+- [Linked List](#linked-list)
+  - [Delete Node in a Linked List](#delete-node-in-a-linked-list)
+  - [Remove Nth Node From End of List](#remove-nth-node-from-end-of-list)
+  - [Reverse Linked List](#reverse-linked-list)
+  - [Merge Two Sorted Lists](#merge-two-sorted-lists)
+  - [Palindrome Linked List](#palindrome-linked-list)
+  - [Linked List Cycle](#linked-list-cycle)
 
 ## Array
 
@@ -855,5 +862,233 @@ function longestCommonPrefix(strs: string[]): string {
     }
 
     return strs[0].substring(0, i);
+};
+```
+
+## Linked List
+
+### Delete Node in a Linked List
+
+> Write a function to delete a node in a singly-linked list. You will not be given access to the head of the list, instead you will be given access to the node to be deleted directly.  
+It is guaranteed that the node to be deleted is not a tail node in the list.  
+
+Comments: stupid question with official solution by copying value inside the node but not deleting the node itself.
+
+### Remove Nth Node From End of List
+
+> Given the head of a linked list, remove the nth node from the end of the list and return its head.  
+Follow up: Could you do this in one pass?  
+
+Comments: two passes is easy. The official one pass solution with two pointer is refreshing at glance, but its time consuming is same to the two pass solution. Not convincing.
+
+### Reverse Linked List
+
+> Given the head of a singly linked list, reverse the list, and return the reversed list. 
+
+Comments: finally a good question.
+
+```typescript
+// typescript
+// class ListNode {
+//     val: number
+//     next: ListNode | null
+//     constructor(val?: number, next?: ListNode | null) {
+//         this.val = (val===undefined ? 0 : val)
+//         this.next = (next===undefined ? null : next)
+//     }
+// }
+
+function reverseList(head: ListNode | null): ListNode | null {
+    if (!head || !head.next) {
+        return head;
+    }
+    let pA: ListNode | null = null;
+    let pB: ListNode | null = head;
+    let pC: ListNode | null = head.next;
+
+    while (pC) {
+        pB.next = pA;
+        pA = pB;
+        pB = pC;
+        pC = pC.next;
+    }
+    pB.next = pA;
+
+    return pB;
+};
+```
+
+### Merge Two Sorted Lists
+
+> Merge two sorted linked lists and return it as a sorted list. The list should be made by splicing together the nodes of the first two lists.
+
+```typescript
+// typescript
+// class ListNode {
+//     val: number
+//     next: ListNode | null
+//     constructor(val?: number, next?: ListNode | null) {
+//         this.val = (val===undefined ? 0 : val)
+//         this.next = (next===undefined ? null : next)
+//     }
+// }
+
+function mergeTwoLists(l1: ListNode | null, l2: ListNode | null): ListNode | null {
+    if (l1 === null && l2 === null) return null;
+    if (l1 === null) return l2;
+    if (l2 === null) return l1;
+
+    const result: ListNode | null = new ListNode();
+    let pt = result;
+
+    while (l1 || l2) {
+        if (l1 === null) {
+            pt.next = l2;
+            break;
+        }
+        if (l2 === null) {
+            pt.next = l1;
+            break;
+        }
+
+        if (l1.val <= l2.val) {
+            pt.next = l1;
+            l1 = l1.next;
+        } else {
+            pt.next = l2;
+            l2 = l2.next;
+        }
+        pt = pt.next;
+    }
+
+
+    return result.next;
+};
+```
+
+### Palindrome Linked List
+
+> Given a singly linked list, determine if it is a palindrome.  
+Follow up:  
+Could you do it in O(n) time and O(1) space?
+
+Solution: fast | slow pointers.
+
+```typescript
+// typescript
+// class ListNode {
+//     val: number
+//     next: ListNode | null
+//     constructor(val?: number, next?: ListNode | null) {
+//         this.val = (val===undefined ? 0 : val)
+//         this.next = (next===undefined ? null : next)
+//     }
+// }
+
+
+// function fromArray(nums: number[]): ListNode | null {
+//     let node = null;
+//     while (nums.length > 0) {
+//         if (node === null) {
+//             node = new ListNode(nums.pop());
+//         } else {
+//             node = new ListNode(nums.pop(), node);
+//         }
+//     }
+//     return node;
+// }
+
+function isEqual(l1: ListNode | null, l2: ListNode | null): boolean {
+    while (true) {
+        if (l1 === null && l2 === null) {
+            return true;
+        } else {
+            if (l1 === null || l2 === null) {
+                return false;
+            } else if (l1.val !== l2.val) {
+                return false;
+            } else {
+                l1 = l1.next;
+                l2 = l2.next;
+            }
+        }
+    }
+}
+
+function isPalindrome(head: ListNode | null): boolean {
+    if (!head || !head.next) {
+        return true;
+    }
+
+    let pFast = head.next;
+    let pA = null;
+    let pB = head; // pSlow
+    let pC = head.next;
+
+    let pMidL = null;
+    let pMidR = null;
+
+    while (true) {
+        if (pFast.next && pFast.next.next) {
+            pFast = pFast.next.next;
+
+            pB.next = pA;
+            pA = pB;
+            pB = pC;
+            pC = pC.next;
+        } else if (pFast.next) {
+            pMidL = pB;
+            pMidR = pC.next;
+            break;
+        } else {
+            pMidL = pB;
+            pMidR = pC;
+            break;
+        }
+    }
+    pB.next = pA;
+
+    return isEqual(pMidL, pMidR);
+};
+```
+
+### Linked List Cycle
+
+> Given head, the head of a linked list, determine if the linked list has a cycle in it.  
+There is a cycle in a linked list if there is some node in the list that can be reached again by continuously following the next pointer. Internally, pos is used to denote the index of the node that tail's next pointer is connected to. Note that pos is not passed as a parameter.  
+Return true if there is a cycle in the linked list. Otherwise, return false.  
+Follow up: Can you solve it using O(1) (i.e. constant) memory?
+
+Solution: fast | slow pointers.
+
+```typescript
+// typescript
+// class ListNode {
+//     val: number
+//     next: ListNode | null
+//     constructor(val?: number, next?: ListNode | null) {
+//         this.val = (val===undefined ? 0 : val)
+//         this.next = (next===undefined ? null : next)
+//     }
+// }
+function hasCycle(head: ListNode | null): boolean {
+    if (!head || !head.next) {
+        return false;
+    }
+
+    let pFast = head.next;
+    let pSlow = head;
+
+    while (true) {
+        if (pFast.next && pFast.next.next) {
+            pFast = pFast.next.next;
+            pSlow = pSlow.next;
+            if (pFast === pSlow) {
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
 };
 ```
