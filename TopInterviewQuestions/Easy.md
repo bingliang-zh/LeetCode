@@ -12,6 +12,16 @@
   - [Two Sum](#two-sum)
   - [Valid Sudoku](#valid-sudoku)
   - [Rotate Image](#rotate-image)
+- [Strings](#strings)
+  - [Reverse String](#reverse-string)
+  - [Reverse Integer](#reverse-integer)
+  - [First Unique Character in a String](#first-unique-character-in-a-string)
+  - [Valid Anagram](#valid-anagram)
+  - [Valid Palindrome](#valid-palindrome)
+  - [String to Integer (atoi)](#string-to-integer-atoi)
+  - [Implement strStr()](#implement-strstr)
+  - [Count and Say](#count-and-say)
+  - [Longest Common Prefix](#longest-common-prefix)
 
 ## Array
 
@@ -461,5 +471,389 @@ function rotate(matrix: number[][]): void {
             matrix[j][k - 1 - i] = temp;
         }
     }
+};
+```
+
+## Strings
+
+### Reverse String
+
+> Write a function that reverses a string. The input string is given as an array of characters char[].  
+Do not allocate extra space for another array, you must do this by modifying the input array in-place with O(1) extra memory.  
+You may assume all the characters consist of printable ascii characters.  
+
+Solution: the idea is to swap end to end.
+
+```typescript
+// typescript
+function reverseString(s: string[]): void {
+    // using built in function
+    s.reverse();
+};
+```
+
+### Reverse Integer
+
+> Given a signed 32-bit integer x, return x with its digits reversed. If reversing x causes the value to go outside the signed 32-bit integer range [-231, 231 - 1], then return 0.  
+Assume the environment does not allow you to store 64-bit integers (signed or unsigned).  
+
+```typescript
+// typescript
+function reverse(x: number): number {
+    let str = [...x.toString(10)];
+    const isMinus = str[0] === '-';
+    if (isMinus) {
+        str.shift();
+    }
+    // if the system is 32-bit integer max, use overflow method watching its sign's change
+    // since js is not and reproducing overflow is complicated, I'll go with mathematic comparison
+
+    let sum = 0;
+    for (let i = 0; i < str.length; i++) {
+        sum += Number(str[i]) * Math.pow(10, i);
+    }
+    if (isMinus) {
+        sum *= -1;
+    }
+
+    if (sum > Math.pow(2, 31) - 1 || sum < -Math.pow(2, 31)) {
+        sum = 0;
+    }
+    return sum;
+};
+```
+
+### First Unique Character in a String
+
+> Given a string, find the first non-repeating character in it and return its index. If it doesn't exist, return -1.  
+Note: You may assume the string contains only lowercase English letters.  
+
+```typescript
+// typescript
+// array
+interface Bundle {
+    char: string;
+    index: number;
+    count: number;
+}
+
+function firstUniqChar(s: string): number {
+    const arr = new Array<Bundle>();
+    for (let i = 0; i < s.length; i++) {
+        const index = arr.findIndex(a => a.char === s[i]);
+        if (index === -1) {
+            arr.push({
+                char: s[i],
+                index: i,
+                count: 1
+            });
+        } else {
+            arr[index].count++;
+        }
+    }
+
+    for (let i = 0; i < arr.length; i++) {
+        if (arr[i].count === 1) {
+            return arr[i].index;
+        }
+    }
+    return -1;
+};
+
+// map: better read performance
+interface Bundle {
+    index: number;
+    count: number;
+}
+
+function firstUniqChar(s: string): number {
+    const map = new Map<string, Bundle>();
+    for (let i = 0; i < s.length; i++) {
+        if (map.has(s[i])) {
+            map.get(s[i]).count++;
+        } else {
+            map.set(s[i], {index: i, count: 1})
+        }
+    }
+
+    let index = -1;
+    for (let item of map.values()) {
+        if (item.count === 1) {
+            if (index === -1 || index > item.index) {
+                index = item.index;
+            }
+        }
+    }
+    return index;
+};
+```
+
+### Valid Anagram
+
+> Given two strings s and t , write a function to determine if t is an anagram of s.  
+Note: You may assume the string contains only lowercase alphabets.  
+Follow up: What if the inputs contain unicode characters? How would you adapt your solution to such case?  
+
+```typescript
+// typescript
+function isAnagram(s: string, t: string): boolean {
+    const map = new Map<string, number>();
+    for (let i = 0; i < s.length; i++) {
+        const c = s[i];
+        if (map.has(c)) {
+            const count = map.get(c);
+            map.set(c, count + 1);
+        } else {
+            map.set(c, 1);
+        }
+    }
+
+    for (let i = 0; i < t.length; i++) {
+        const c = t[i];
+        if (!map.has(c)) {
+            return false;
+        } else {
+            const count = map.get(c);
+            if (count === 1) {
+                map.delete(c);
+            } else {
+                map.set(c, count - 1);
+            }
+        }
+    }
+
+    return map.size === 0;
+};
+```
+
+### Valid Palindrome
+
+> Given a string s, determine if it is a palindrome, considering only alphanumeric characters and ignoring cases.
+
+```typescript
+// typescript
+const aCode = 'a'.charCodeAt(0);
+const zCode = 'z'.charCodeAt(0);
+const ACode = 'A'.charCodeAt(0);
+const ZCode = 'Z'.charCodeAt(0);
+const _0Code = '0'.charCodeAt(0);
+const _9Code = '9'.charCodeAt(0);
+
+function getId(charCode: number): number {
+    if (charCode >= aCode && charCode <= zCode) {
+        return charCode - aCode;
+    }
+    if (charCode >= ACode && charCode <= ZCode) {
+        return charCode - ACode;
+    }
+    if (charCode >= _0Code && charCode <= _9Code) {
+        return charCode - _0Code + 30;
+    }
+    return -1;
+}
+
+function isPalindrome(s: string): boolean {
+    let a = 0;
+    let b = s.length - 1;
+    while (a < b) {
+        const charCodeA = s.charCodeAt(a);
+        const charCodeB = s.charCodeAt(b);
+
+        const idA = getId(charCodeA);
+        const idB = getId(charCodeB);
+
+        if (idA === -1 || idB === -1) {
+            if (idA === -1) {
+                a++;
+            }
+            if (idB === -1) {
+                b--;
+            }
+            continue;
+        }
+
+        if (idA !== idB) {
+            return false;
+        } else {
+            a++;
+            b--;
+        }
+    }
+    return true;
+};
+```
+
+### String to Integer (atoi)
+
+> Implement the myAtoi(string s) function, which converts a string to a 32-bit signed integer (similar to C/C++'s atoi function).  
+The algorithm for myAtoi(string s) is as follows:  
+Read in and ignore any leading whitespace.  
+Check if the next character (if not already at the end of the string) is '-' or '+'. Read this character in if it is either. This determines if the final result is negative or positive respectively. Assume the result is positive if neither is present.  
+Read in next the characters until the next non-digit charcter or the end of the input is reached. The rest of the string is ignored.
+Convert these digits into an integer (i.e. "123" -> 123, "0032" -> 32). If no digits were read, then the integer is 0. Change the sign as necessary (from step 2).  
+If the integer is out of the 32-bit signed integer range [-231, 231 - 1], then clamp the integer so that it remains in the range. Specifically, integers less than -231 should be clamped to -231, and integers greater than 231 - 1 should be clamped to 231 - 1.  
+Return the integer as the final result.  
+Note:  
+Only the space character ' ' is considered a whitespace character.  
+Do not ignore any characters other than the leading whitespace or the rest of the string after the digits.  
+
+```typescript
+// typescript
+const _0CharCode = '0'.charCodeAt(0);
+
+function myAtoi(s: string): number {
+    let result = 0;
+
+    let i;
+    let positive = true;
+
+    for (i = 0; i < s.length; i++) {
+        const current = s[i];
+        if (current === ' ') continue;
+        if (current === '+' || current === '-') {
+            i++;
+            positive = current === '+';
+            break;
+        } else if (current >= '0' && current <= '9') {
+            break;
+        }
+        return result;
+    }
+
+    for (; i < s.length; i++) {
+        const current = s[i];
+        if (current >= '0' && current <= '9') {
+            result *= 10;
+            result += current.charCodeAt(0) - _0CharCode;
+        } else {
+            break;
+        }
+    }
+
+    result *= positive ? 1 : -1;
+
+    if (result > Math.pow(2, 31) - 1) {
+        result = Math.pow(2, 31) - 1
+    }
+    if (result < -Math.pow(2, 31)) {
+        result = -Math.pow(2, 31)
+    }
+    return result;
+};
+```
+
+### Implement strStr()
+
+> Implement strStr().  
+Return the index of the first occurrence of needle in haystack, or -1 if needle is not part of haystack.  
+Clarification:  
+What should we return when needle is an empty string? This is a great question to ask during an interview.  
+For the purpose of this problem, we will return 0 when needle is an empty string. This is consistent to C's strstr() and Java's indexOf().  
+
+```typescript
+// typescript
+function strStr(haystack: string, needle: string): number {
+    if (needle.length === 0) {
+        return 0;
+    }
+    for (let i = 0; i < haystack.length; i++) {
+        let found = true;
+        for (let j = 0; j < needle.length; j++) {
+            if (i + j >= haystack.length) {
+                return -1;
+            }
+            if (haystack[i + j] !== needle[j]) {
+                found = false;
+                break;
+            }
+        }
+        if (found) {
+            return i;
+        }
+    }
+    return -1;
+};
+```
+
+### Count and Say
+
+> The count-and-say sequence is a sequence of digit strings defined by the recursive formula:  
+countAndSay(1) = "1"  
+countAndSay(n) is the way you would "say" the digit string from countAndSay(n-1), which is then converted into a different digit string.  
+To determine how you "say" a digit string, split it into the minimal number of groups so that each group is a contiguous section all of the same character. Then for each group, say the number of characters, then say the character. To convert the saying into a digit string, replace the counts with a number and concatenate every saying.  
+Given a positive integer n, return the nth term of the count-and-say sequence.
+
+```typescript
+// typescript
+function _countAndSay(n: string[]): string[] {
+    let result = Array<string>();
+    let current;
+    let count = 0;
+    for (let i = 0; i < n.length; i++) {
+        if (current === undefined) {
+            current = n[i];
+            count = 1;
+        } else if (current === n[i]) {
+            count++;
+        } else {
+            result.push(count.toString());
+            result.push(current);
+            current = n[i];
+            count = 1;
+        }
+    }
+    result.push(count.toString());
+    result.push(current);
+    return result;
+}
+
+function countAndSay(n: number): string {
+    let arr = ['1'];
+    for (let i = 0; i < n - 1; i++) {
+        arr = _countAndSay(arr);
+    }
+    return arr.join('');
+};
+```
+
+### Longest Common Prefix
+
+> Write a function to find the longest common prefix string amongst an array of strings.  
+If there is no common prefix, return an empty string "".  
+
+Solution: a better solution is adapting binary search.
+
+```typescript
+// typescript
+function longestCommonPrefix(strs: string[]): string {
+    if (strs.length === 0) {
+        return '';
+    }
+
+    let minLength = -1;
+    strs.forEach(str => {
+        if (minLength === -1) {
+            minLength = str.length;
+        } else if (minLength > str.length) {
+            minLength = str.length;
+        }
+    })
+
+    let i = 0;
+    for (; i < minLength; i++) {
+        const item = strs[0][i];
+        let allEqual = true;
+        for (let j = 1; j < strs.length; j++) {
+            if (strs[j][i] !== item) {
+                allEqual = false;
+                break;
+            }
+        }
+        if (!allEqual) {
+            break;
+        }
+    }
+
+    return strs[0].substring(0, i);
 };
 ```
