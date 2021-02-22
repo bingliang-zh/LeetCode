@@ -29,6 +29,12 @@
   - [Merge Two Sorted Lists](#merge-two-sorted-lists)
   - [Palindrome Linked List](#palindrome-linked-list)
   - [Linked List Cycle](#linked-list-cycle)
+- [Trees](#trees)
+  - [Maximum Depth of Binary Tree](#maximum-depth-of-binary-tree)
+  - [Validate Binary Search Tree](#validate-binary-search-tree)
+  - [Symmetric Tree](#symmetric-tree)
+  - [Binary Tree Level Order Traversal](#binary-tree-level-order-traversal)
+  - [Convert Sorted Array to Binary Search Tree](#convert-sorted-array-to-binary-search-tree)
 
 ## Array
 
@@ -867,6 +873,30 @@ function longestCommonPrefix(strs: string[]): string {
 
 ## Linked List
 
+```typescript
+class ListNode {
+    val: number
+    next: ListNode | null
+    constructor(val?: number, next?: ListNode | null) {
+        this.val = (val===undefined ? 0 : val)
+        this.next = (next===undefined ? null : next)
+    }
+}
+
+
+function fromArray(nums: number[]): ListNode | null {
+    let node = null;
+    while (nums.length > 0) {
+        if (node === null) {
+            node = new ListNode(nums.pop());
+        } else {
+            node = new ListNode(nums.pop(), node);
+        }
+    }
+    return node;
+}
+```
+
 ### Delete Node in a Linked List
 
 > Write a function to delete a node in a singly-linked list. You will not be given access to the head of the list, instead you will be given access to the node to be deleted directly.  
@@ -889,15 +919,6 @@ Comments: finally a good question.
 
 ```typescript
 // typescript
-// class ListNode {
-//     val: number
-//     next: ListNode | null
-//     constructor(val?: number, next?: ListNode | null) {
-//         this.val = (val===undefined ? 0 : val)
-//         this.next = (next===undefined ? null : next)
-//     }
-// }
-
 function reverseList(head: ListNode | null): ListNode | null {
     if (!head || !head.next) {
         return head;
@@ -924,15 +945,6 @@ function reverseList(head: ListNode | null): ListNode | null {
 
 ```typescript
 // typescript
-// class ListNode {
-//     val: number
-//     next: ListNode | null
-//     constructor(val?: number, next?: ListNode | null) {
-//         this.val = (val===undefined ? 0 : val)
-//         this.next = (next===undefined ? null : next)
-//     }
-// }
-
 function mergeTwoLists(l1: ListNode | null, l2: ListNode | null): ListNode | null {
     if (l1 === null && l2 === null) return null;
     if (l1 === null) return l2;
@@ -976,28 +988,6 @@ Solution: fast | slow pointers.
 
 ```typescript
 // typescript
-// class ListNode {
-//     val: number
-//     next: ListNode | null
-//     constructor(val?: number, next?: ListNode | null) {
-//         this.val = (val===undefined ? 0 : val)
-//         this.next = (next===undefined ? null : next)
-//     }
-// }
-
-
-// function fromArray(nums: number[]): ListNode | null {
-//     let node = null;
-//     while (nums.length > 0) {
-//         if (node === null) {
-//             node = new ListNode(nums.pop());
-//         } else {
-//             node = new ListNode(nums.pop(), node);
-//         }
-//     }
-//     return node;
-// }
-
 function isEqual(l1: ListNode | null, l2: ListNode | null): boolean {
     while (true) {
         if (l1 === null && l2 === null) {
@@ -1063,14 +1053,6 @@ Solution: fast | slow pointers.
 
 ```typescript
 // typescript
-// class ListNode {
-//     val: number
-//     next: ListNode | null
-//     constructor(val?: number, next?: ListNode | null) {
-//         this.val = (val===undefined ? 0 : val)
-//         this.next = (next===undefined ? null : next)
-//     }
-// }
 function hasCycle(head: ListNode | null): boolean {
     if (!head || !head.next) {
         return false;
@@ -1090,5 +1072,136 @@ function hasCycle(head: ListNode | null): boolean {
             return false;
         }
     }
+};
+```
+
+## Trees
+
+```typescript
+class TreeNode {
+    val: number
+    left: TreeNode | null
+    right: TreeNode | null
+    constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {
+        this.val = (val===undefined ? 0 : val)
+        this.left = (left===undefined ? null : left)
+        this.right = (right===undefined ? null : right)
+    }
+}
+```
+
+### Maximum Depth of Binary Tree
+
+> Given the root of a binary tree, return its maximum depth.  
+A binary tree's maximum depth is the number of nodes along the longest path from the root node down to the farthest leaf node.
+
+```typescript
+// typescript
+function maxDepth(root: TreeNode | null): number {
+    if (root === null) {
+        return 0;
+    }
+    return Math.max(maxDepth(root.left), maxDepth(root.right)) + 1;
+};
+```
+
+### Validate Binary Search Tree
+
+> Given the root of a binary tree, determine if it is a valid binary search tree (BST).  
+A valid BST is defined as follows:  
+The left subtree of a node contains only nodes with keys less than the node's key.  
+The right subtree of a node contains only nodes with keys greater than the node's key.  
+Both the left and right subtrees must also be binary search trees.  
+
+```typescript
+// typescript
+function concatBST(root: TreeNode | null): Array<number> {
+    if (root === null) return [];
+    const left = concatBST(root.left);
+    const right = concatBST(root.right);
+    return [...left, root.val, ...right];
+}
+
+function isValidBST(root: TreeNode | null): boolean {
+    const arr = concatBST(root);
+    for (let i = 0; i < arr.length - 1; i++) {
+        if (arr[i] >= arr[i + 1]) {
+            return false;
+        }
+    }
+    return true;
+};
+```
+
+### Symmetric Tree
+
+> Given the root of a binary tree, check whether it is a mirror of itself (i.e., symmetric around its center). 
+
+```typescript
+// typescript
+function _IsSymmetric(left: TreeNode | null, right: TreeNode | null): boolean {
+    if (left === null && right === null) return true;
+    if (left !== right && (left === null || right === null)) return false;
+    if (left.val !== right.val) {
+        return false;
+    }
+    return _IsSymmetric(left.left, right.right) && _IsSymmetric(left.right, right.left);
+}
+
+function isSymmetric(root: TreeNode | null): boolean {
+    if (root === null) return true;
+    return _IsSymmetric(root.left, root.right);
+};
+```
+
+### Binary Tree Level Order Traversal
+
+> Given the root of a binary tree, return the level order traversal of its nodes' values. (i.e., from left to right, level by level).
+
+```typescript
+// typescript
+function levelOrder(root: TreeNode | null): number[][] {
+    const map = new Map<number, number[]>();
+    const traverse = (node: TreeNode | null, depth: number = 0) => {
+        if (!map.has(depth)) {
+            map.set(depth, []);
+        }
+        if (node) {
+            map.get(depth).push(node.val);
+            traverse(node.left, depth + 1);
+            traverse(node.right, depth + 1);
+        }
+    }
+
+    traverse(root, 0);
+
+    const result = [];
+    for (let i = 0; i < map.size; i++) {
+        const item = map.get(i);
+        if (item.length > 0) {
+            result.push(item);
+        }
+    }
+    return result;
+};
+```
+
+### Convert Sorted Array to Binary Search Tree
+
+> Given an integer array nums where the elements are sorted in ascending order, convert it to a height-balanced binary search tree.  
+A height-balanced binary tree is a binary tree in which the depth of the two subtrees of every node never differs by more than one.
+
+```typescript
+// typescript
+function sortedArrayToBST(nums: number[]): TreeNode | null {
+    if (nums.length === 0) return null;
+    if (nums.length === 1) return new TreeNode(nums[0]);
+    const halfIndex = Math.floor(nums.length / 2);
+    // slice is time consuming, use two indexes instead
+    const leftHalf = nums.slice(0, halfIndex);
+    const rightHalf = nums.slice(halfIndex + 1, nums.length);
+    const leftNode = sortedArrayToBST(leftHalf);
+    const rightNode = sortedArrayToBST(rightHalf);
+    return new TreeNode(nums[halfIndex], leftNode, rightNode);
 };
 ```
