@@ -38,6 +38,9 @@
 - [Sorting and Searching](#sorting-and-searching)
   - [Merge Sorted Array](#merge-sorted-array)
   - [First Bad Version](#first-bad-version)
+- [Dynamic Programming](#dynamic-programming)
+  - [Climbing Stairs](#climbing-stairs)
+  - [Best Time to Buy and Sell Stock](#best-time-to-buy-and-sell-stock)
 
 ## Array
 
@@ -1271,5 +1274,73 @@ const solution = (isBadVersion: (version: number) => boolean) => {
     return (n: number): number => {
         return binarySearch(n, 1, n);
     };
+};
+```
+
+## Dynamic Programming
+
+### Climbing Stairs
+
+> You are climbing a staircase. It takes n steps to reach the top.  
+Each time you can either climb 1 or 2 steps. In how many distinct ways can you climb to the top?
+
+```typescript
+// typescript
+// mathematic solution
+function climbStairs(n: number): number {
+    const max2s = Math.floor(n / 2);
+
+    let result = 0;
+
+    for (let i = 0; i <= max2s; i++) {
+        const ones = n - 2 * i;
+        const twos = i;
+        const count = ones + twos;
+
+        let val = 1;
+
+        for (let j = 1; j <= Math.min(ones, twos); j++) {
+            val *= count - j + 1;
+            val /= j;
+        }
+
+        result += val;
+    }
+    return result;
+};
+```
+
+### Best Time to Buy and Sell Stock
+
+> You are given an array prices where prices[i] is the price of a given stock on the ith day.  
+You want to maximize your profit by choosing a single day to buy one stock and choosing a different day in the future to sell that stock.  
+Return the maximum profit you can achieve from this transaction. If you cannot achieve any profit, return 0.
+
+```typescript
+// typescript
+function maxProfit(prices: number[]): number {
+    if (prices.length < 2) return 0;
+
+    let bestProfit = 0;
+    let lastProfit = 0; // lastProfit is unnecessary
+
+    let lastMinPrice = prices[0];
+
+    for (let i = 1; i < prices.length; i++) {
+        const currentPrice = prices[i];
+        const currentProfit= currentPrice - lastMinPrice;
+        if (currentProfit > lastProfit) {
+            lastProfit = currentProfit;
+            if (lastProfit > bestProfit) {
+                bestProfit = lastProfit;
+            }
+            continue;
+        }
+        if (currentPrice < lastMinPrice) {
+            lastMinPrice = currentPrice;
+            lastProfit = 0;
+        }
+    }
+    return bestProfit;
 };
 ```
