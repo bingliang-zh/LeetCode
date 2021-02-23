@@ -35,6 +35,9 @@
   - [Symmetric Tree](#symmetric-tree)
   - [Binary Tree Level Order Traversal](#binary-tree-level-order-traversal)
   - [Convert Sorted Array to Binary Search Tree](#convert-sorted-array-to-binary-search-tree)
+- [Sorting and Searching](#sorting-and-searching)
+  - [Merge Sorted Array](#merge-sorted-array)
+  - [First Bad Version](#first-bad-version)
 
 ## Array
 
@@ -1203,5 +1206,70 @@ function sortedArrayToBST(nums: number[]): TreeNode | null {
     const leftNode = sortedArrayToBST(leftHalf);
     const rightNode = sortedArrayToBST(rightHalf);
     return new TreeNode(nums[halfIndex], leftNode, rightNode);
+};
+```
+
+## Sorting and Searching
+
+### Merge Sorted Array
+
+> Given two sorted integer arrays nums1 and nums2, merge nums2 into nums1 as one sorted array.  
+The number of elements initialized in nums1 and nums2 are m and n respectively. You may assume that nums1 has a size equal to m + n such that it has enough space to hold additional elements from nums2.
+
+```typescript
+// typescript
+function merge(nums1: number[], m: number, nums2: number[], n: number): void {
+    let i1 = m - 1;
+    let i2 = n - 1;
+    let i3 = m + n - 1;
+
+    while (i1 >= 0 && i2 >= 0) {
+        // changing >= to >, improved speed a lot
+        if (nums2[i2] > nums1[i1]) {
+            nums1[i3] = nums2[i2];
+            i2--;
+        } else {
+            nums1[i3] = nums1[i1];
+            i1--;
+        }
+        i3--;
+    }
+
+    while (i2 >= 0) {
+        nums1[i3] = nums2[i2];
+        i2--;
+        i3--;
+    }
+};
+```
+
+### First Bad Version
+
+> You are a product manager and currently leading a team to develop a new product. Unfortunately, the latest version of your product fails the quality check. Since each version is developed based on the previous version, all the versions after a bad version are also bad.  
+Suppose you have n versions [1, 2, ..., n] and you want to find out the first bad one, which causes all the following ones to be bad.  
+You are given an API bool isBadVersion(version) which returns whether version is bad. Implement a function to find the first bad version. You should minimize the number of calls to the API.  
+
+Solution: binary search.
+
+```typescript
+// typescript
+const solution = (isBadVersion: (version: number) => boolean) => {
+    const binarySearch = (n: number, start: number, end: number) => {
+        if (end === 1) return 1;
+        const center = Math.floor((start + end) / 2);
+        if (isBadVersion(center) && !isBadVersion(center - 1)) {
+            return center;
+        } else {
+            if (isBadVersion(center)) {
+                return binarySearch(n, start, center - 1);
+            } else {
+                return binarySearch(n, center + 1, end);
+            }
+        }
+    }
+
+    return (n: number): number => {
+        return binarySearch(n, 1, n);
+    };
 };
 ```
