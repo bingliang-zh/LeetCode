@@ -41,6 +41,8 @@
 - [Dynamic Programming](#dynamic-programming)
   - [Climbing Stairs](#climbing-stairs)
   - [Best Time to Buy and Sell Stock](#best-time-to-buy-and-sell-stock)
+  - [Maximum Subarray](#maximum-subarray)
+  - [House Robber](#house-robber)
 
 ## Array
 
@@ -1342,5 +1344,66 @@ function maxProfit(prices: number[]): number {
         }
     }
     return bestProfit;
+};
+```
+
+### Maximum Subarray
+
+> Given an integer array nums, find the contiguous subarray (containing at least one number) which has the largest sum and return its sum.
+
+```typescript
+// typescript
+function maxSubArray(nums: number[]): number {
+    let largestSum = -Number.MAX_VALUE;
+    let currentSum = 0;
+
+    for (let i = 0; i < nums.length; i++) {
+        if (currentSum < 0) {
+            currentSum = 0;
+        }
+        currentSum += nums[i];
+        if (largestSum < currentSum) {
+            largestSum = currentSum;
+        }
+    }
+    return largestSum;
+};
+```
+
+### House Robber
+
+> You are a professional robber planning to rob houses along a street. Each house has a certain amount of money stashed, the only constraint stopping you from robbing each of them is that adjacent houses have security system connected and it will automatically contact the police if two adjacent houses were broken into on the same night.  
+Given a list of non-negative integers representing the amount of money of each house, determine the maximum amount of money you can rob tonight without alerting the police.
+
+```typescript
+// typescript
+// basic idea, but exceeded time limit
+function rob(nums: number[]): number {
+    const maxProfit = (i: number) => {
+        if (i < 0) return 0;
+        return Math.max(maxProfit(i - 2) + nums[i], maxProfit(i - 1));
+    }
+
+    return maxProfit(nums.length - 1);
+};
+
+// rewrite
+function rob(nums: number[]): number {
+    let maxProfitOdd = 0;
+    let maxProfitEven = 0;
+
+    for (let i = 0; i < nums.length; i++) {
+        if (i === 0) {
+            maxProfitEven = nums[i];
+        } else {
+            if (i % 2 === 0) {
+                maxProfitEven = Math.max(maxProfitEven + nums[i], maxProfitOdd);
+            } else {
+                maxProfitOdd = Math.max(maxProfitOdd + nums[i], maxProfitEven);
+            }
+        }
+    }
+
+    return Math.max(maxProfitEven, maxProfitOdd);
 };
 ```
