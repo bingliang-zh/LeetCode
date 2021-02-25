@@ -43,6 +43,9 @@
   - [Best Time to Buy and Sell Stock](#best-time-to-buy-and-sell-stock)
   - [Maximum Subarray](#maximum-subarray)
   - [House Robber](#house-robber)
+- [Design](#design)
+  - [Shuffle an Array](#shuffle-an-array)
+  - [Min Stack](#min-stack)
 
 ## Array
 
@@ -1406,4 +1409,78 @@ function rob(nums: number[]): number {
 
     return Math.max(maxProfitEven, maxProfitOdd);
 };
+```
+
+## Design
+
+### Shuffle an Array
+
+> Given an integer array nums, design an algorithm to randomly shuffle the array.  
+Implement the Solution class:  
+Solution(int[] nums) Initializes the object with the integer array nums.  
+int[] reset() Resets the array to its original configuration and returns it.  
+int[] shuffle() Returns a random shuffling of the array.  
+
+```typescript
+// typescript
+class Solution {
+    private raw: Array<number>;
+    constructor(nums: number[]) {
+        this.raw = nums.concat();
+    }
+
+    reset(): number[] {
+        return this.raw.concat();
+    }
+
+    shuffle(): number[] {
+        const result = new Array<number>(this.raw.length);
+        const tempArr = this.raw.concat();
+        for (let i = 0, j = tempArr.length; i < result.length; i++, j--) {
+            const randomIndex = Math.floor(Math.random() * j);
+            result[i] = tempArr[randomIndex];
+            tempArr[randomIndex] = tempArr[j - 1];
+        }
+        return result;
+    }
+}
+```
+
+### Min Stack
+
+> Design a stack that supports push, pop, top, and retrieving the minimum element in constant time.  
+push(x) -- Push element x onto stack.  
+pop() -- Removes the element on top of the stack.  
+top() -- Get the top element.  
+getMin() -- Retrieve the minimum element in the stack.  
+
+```typescript
+// typescript
+// solved after hinted
+class MinStack {
+    private stack: Array<{val: number, min: number}>;
+    constructor() {
+        this.stack = [];
+    }
+
+    push(x: number): void {
+        if (this.stack.length === 0) {
+            this.stack.push({val: x, min: x});
+        } else {
+            this.stack.push({val: x, min: Math.min(this.stack[this.stack.length - 1].min, x)});
+        }
+    }
+
+    pop(): void {
+        this.stack.pop();
+    }
+
+    top(): number {
+        return this.stack[this.stack.length - 1].val;
+    }
+
+    getMin(): number {
+        return this.stack[this.stack.length - 1].min;
+    }
+}
 ```
