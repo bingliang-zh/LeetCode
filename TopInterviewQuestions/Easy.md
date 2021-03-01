@@ -46,6 +46,11 @@
 - [Design](#design)
   - [Shuffle an Array](#shuffle-an-array)
   - [Min Stack](#min-stack)
+- [Math](#math)
+  - [Fizz Buzz](#fizz-buzz)
+  - [Count Primes](#count-primes)
+  - [Power of Three](#power-of-three)
+  - [Roman to Integer](#roman-to-integer)
 
 ## Array
 
@@ -1483,4 +1488,129 @@ class MinStack {
         return this.stack[this.stack.length - 1].min;
     }
 }
+```
+
+
+## Math
+
+### Fizz Buzz
+
+> Write a program that outputs the string representation of numbers from 1 to n.  
+But for multiples of three it should output “Fizz” instead of the number and for the multiples of five output “Buzz”. For numbers which are multiples of both three and five output “FizzBuzz”.
+
+```typescript
+// typescript
+function fizzBuzz(n: number): string[] {
+    const result = new Array<string>();
+
+    for (let i = 1; i <= n; i++) {
+        const fizz = i % 3 === 0;
+        const buzz = i % 5 === 0;
+        if (fizz && buzz) {
+            result.push('FizzBuzz');
+        } else if (fizz) {
+            result.push('Fizz');
+        } else if (buzz) {
+            result.push('Buzz');
+        } else {
+            result.push(i.toString());
+        }
+    }
+
+    return result;
+};
+```
+
+### Count Primes
+
+> Count the number of prime numbers less than a non-negative number, n.
+
+```typescript
+// typescript
+function countPrimes(n: number): number {
+    if (n < 3) {
+        return 0;
+    }
+    if (n === 3) {
+        return 1;
+    }
+    const primes = [2];
+
+    const isPrime = (num: number) => {
+        for (let i = 0; i < primes.length; i++) {
+            if (primes[i] * primes[i] > num) {
+                break;
+            }
+            if (num % primes[i] === 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    for (let i = 3; i < n; i++) {
+        const primeFlag = isPrime(i);
+        if (primeFlag) {
+            primes.push(i);
+        }
+    }
+
+    return primes.length;
+};
+```
+
+### Power of Three
+
+> Given an integer n, return true if it is a power of three. Otherwise, return false.  
+An integer n is a power of three, if there exists an integer x such that n == 3x.
+
+```typescript
+// typescript
+function isPowerOfThree(n: number): boolean {
+    let t = n;
+    if (t <= 0) {
+        return false;
+    }
+    while (t > 1) {
+        if (t % 3 !== 0) return false;
+        t /= 3;
+    }
+    return true;
+};
+```
+
+### Roman to Integer
+
+> <https://leetcode.com/explore/featured/card/top-interview-questions-easy/102/math/878/>
+
+```typescript
+// typescript
+function romanToInt(s: string): number {
+    const nums = new Array<number>();
+    for (let i = 0; i < s.length; i++) {
+        switch (s[i]) {
+            case 'I': nums.push(1); break;
+            case 'V': nums.push(5); break;
+            case 'X': nums.push(10); break;
+            case 'L': nums.push(50); break;
+            case 'C': nums.push(100); break;
+            case 'D': nums.push(500); break;
+            case 'M': nums.push(1000); break;
+        }
+    }
+
+    let sum = 0;
+    for (let i = 0; i < nums.length; i++) {
+        if (i + 1 < nums.length) {
+            if (nums[i] >= nums[i + 1]) {
+                sum += nums[i];
+            } else {
+                sum -= nums[i];
+            }
+        } else {
+            sum += nums[i];
+        }
+    }
+    return sum;
+};
 ```
