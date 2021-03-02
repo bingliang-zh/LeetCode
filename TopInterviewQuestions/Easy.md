@@ -51,6 +51,13 @@
   - [Count Primes](#count-primes)
   - [Power of Three](#power-of-three)
   - [Roman to Integer](#roman-to-integer)
+- [Others](#others)
+  - [Number of 1 Bits](#number-of-1-bits)
+  - [Hamming Distance](#hamming-distance)
+  - [Reverse Bits](#reverse-bits)
+  - [Pascal's Triangle](#pascals-triangle)
+  - [Valid Parentheses](#valid-parentheses)
+  - [Missing Number](#missing-number)
 
 ## Array
 
@@ -1612,5 +1619,171 @@ function romanToInt(s: string): number {
         }
     }
     return sum;
+};
+```
+
+## Others
+
+### Number of 1 Bits
+
+> Write a function that takes an unsigned integer and returns the number of '1' bits it has (also known as the Hamming weight).  
+Note:  
+Note that in some languages such as Java, there is no unsigned integer type. In this case, the input will be given as a signed integer type. It should not affect your implementation, as the integer's internal binary representation is the same, whether it is signed or unsigned.  
+In Java, the compiler represents the signed integers using 2's complement notation. Therefore, in Example 3, the input represents the signed integer. -3.  
+Follow up: If this function is called many times, how would you optimize it?
+
+Comments: using parallel calculations?
+
+```typescript
+// typescript
+function hammingWeight(n: number): number {
+    let count = 0;
+    for (let i = 0; i < 32; i++) {
+        if ((n & 1) === 1) {
+            count ++;
+        }
+        n = n >> 1;
+    }
+    return count;
+};
+```
+
+### Hamming Distance
+
+> The Hamming distance between two integers is the number of positions at which the corresponding bits are different.  
+Given two integers x and y, calculate the Hamming distance.  
+
+```typescript
+// typescript
+function hammingDistance(x: number, y: number): number {
+    const n = x ^ y;
+    // use 'hammingWeight' ahead
+    return hammingWeight(n);
+};
+```
+
+### Reverse Bits
+
+> Reverse bits of a given 32 bits unsigned integer.  
+Note:  
+Note that in some languages such as Java, there is no unsigned integer type. In this case, both input and output will be given as a signed integer type. They should not affect your implementation, as the integer's internal binary representation is the same, whether it is signed or unsigned.  
+In Java, the compiler represents the signed integers using 2's complement notation. Therefore, in Example 2 above, the input represents the signed integer -3 and the output represents the signed integer -1073741825.  
+Follow up:  
+If this function is called many times, how would you optimize it?  
+
+Comments: failed when n = 0b11111111111111111111111111111101, sign flipped.
+
+```typescript
+// typescript
+function reverseBits(n: number): number {
+    let result = 0;
+	for (let i = 0; i < 32; i++) {
+        const b = n & 1;
+        result = (result << 1) + b;
+        n = n >> 1;
+    }
+    return result;
+};
+```
+
+### Pascal's Triangle
+
+> Given an integer numRows, return the first numRows of Pascal's triangle.  
+In Pascal's triangle, each number is the sum of the two numbers directly above it.  
+
+```typescript
+// typescript
+function generate(numRows: number): number[][] {
+    const result: number[][] = [];
+    for (let i = 0; i < numRows; i++) {
+        if (i === 0) {
+            result.push([1]);
+            continue;
+        }
+        const temp: number[] = [1];
+        for (let j = 0; j < result[i - 1].length - 1; j++) {
+            temp.push(result[i - 1][j] + result[i - 1][j + 1]);
+        }
+        temp.push(1);
+        result.push(temp);
+    }
+    return result;
+};
+```
+
+### Valid Parentheses
+
+> Given a string s containing just the characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid.  
+An input string is valid if:  
+Open brackets must be closed by the same type of brackets.  
+Open brackets must be closed in the correct order.  
+
+```typescript
+// typescript
+function isValid(s: string): boolean {
+    const stack = Array<string>();
+
+    for (let i = 0; i < s.length; i++) {
+        const current = s[i];
+        switch (current) {
+            case '(':
+            case '{':
+            case '[': stack.push(current); break;
+            case ')':
+                if (stack[stack.length - 1] === '(') {
+                    stack.pop();
+                } else {
+                    return false;
+                }
+                break;
+            case '}':
+                if (stack[stack.length - 1] === '{') {
+                    stack.pop();
+                } else {
+                    return false;
+                }
+                break;
+            case ']':
+                if (stack[stack.length - 1] === '[') {
+                    stack.pop();
+                } else {
+                    return false;
+                }
+                break;
+        }
+    };
+    return stack.length === 0;
+};
+```
+
+### Missing Number
+
+> Given an array nums containing n distinct numbers in the range [0, n], return the only number in the range that is missing from the array.  
+Follow up: Could you implement a solution using only O(1) extra space complexity and O(n) runtime complexity?  
+
+Comments: seems XOR is much better.
+
+```typescript
+// typescript
+function missingNumber(nums: number[]): number {
+    if (nums.length % 2 === 0) {
+        nums.push(nums.length + 1);
+    }
+    const k = (nums.length + 1) / 2;
+    const idealSum = -k;
+    let actualSum = 0;
+    for (let i = 0; i < nums.length; i++) {
+        const current = nums[i];
+        if (current % 2 === 0) {
+            actualSum += current;
+        } else {
+            actualSum -= current;
+        }
+    }
+    if (actualSum > idealSum) {
+        return actualSum - idealSum;
+    } else {
+        return idealSum - actualSum;
+    }
 };
 ```
