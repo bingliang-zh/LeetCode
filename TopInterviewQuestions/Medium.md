@@ -7,6 +7,10 @@
   - [Longest Substring Without Repeating Characters](#longest-substring-without-repeating-characters)
   - [Longest Palindromic Substring](#longest-palindromic-substring)
   - [Increasing Triplet Subsequence](#increasing-triplet-subsequence)
+- [Linked List](#linked-list)
+  - [Add Two Numbers](#add-two-numbers)
+  - [Odd Even Linked List](#odd-even-linked-list)
+  - [Intersection of Two Linked Lists](#intersection-of-two-linked-lists)
 
 ## Array and Strings
 
@@ -272,5 +276,215 @@ function increasingTriplet(nums: number[]): boolean {
         }
     }
     return false;
+};
+```
+
+## Linked List
+
+```typescript
+// typescript
+class ListNode {
+    val: number
+    next: ListNode | null
+    constructor(val?: number, next?: ListNode | null) {
+        this.val = (val===undefined ? 0 : val)
+        this.next = (next===undefined ? null : next)
+    }
+}
+
+const arrToList = (arr: number[]): ListNode | null => {
+    let result: ListNode | null;
+    let last: ListNode | null;
+
+    for (let i = 0; i < arr.length; i++) {
+        const next = new ListNode(arr[i]);
+        if (!result) {
+            result = next;
+            last = next;
+        } else {
+            last.next = next;
+            last = next;
+        }
+    }
+    return result;
+}
+
+const printList = (list: ListNode | null): void => {
+    const arr = [];
+    while (list) {
+        arr.push(list.val);
+        list = list.next;
+    }
+    console.log(arr);
+}
+```
+
+### Add Two Numbers
+
+> You are given two non-empty linked lists representing two non-negative integers. The digits are stored in reverse order, and each of their nodes contains a single digit. Add the two numbers and return the sum as a linked list.  
+You may assume the two numbers do not contain any leading zero, except the number 0 itself.  
+
+```typescript
+// typescript
+function addTwoNumbers(l1: ListNode | null, l2: ListNode | null): ListNode | null {
+    let result: ListNode | null;
+    let currentNode: ListNode | null;
+    let addOneFlag = false;
+    while (l1 && l2) {
+        const sum = l1.val + l2.val + (addOneFlag ? 1 : 0);
+        const next = new ListNode(sum % 10);
+        if (!currentNode) {
+            currentNode = result = next;
+        } else {
+            currentNode = currentNode.next = next;
+        }
+        addOneFlag = sum > 9;
+        l1 = l1.next;
+        l2 = l2.next;
+    }
+
+    while (l1) {
+        const sum = l1.val + (addOneFlag ? 1 : 0);
+        const next = new ListNode(sum % 10);
+        if (!currentNode) {
+            currentNode = result = next;
+        } else {
+            currentNode = currentNode.next = next;
+        }
+        addOneFlag = sum > 9;
+        l1 = l1.next;
+    }
+
+    while (l2) {
+        const sum = l2.val + (addOneFlag ? 1 : 0);
+        const next = new ListNode(sum % 10);
+        if (!currentNode) {
+            currentNode = result = next;
+        } else {
+            currentNode = currentNode.next = next;
+        }
+        addOneFlag = sum > 9;
+        l2 = l2.next;
+    }
+    if (addOneFlag) {
+        currentNode.next = new ListNode(1);
+    }
+    return result;
+};
+```
+
+### Odd Even Linked List
+
+> Given the head of a singly linked list, group all the nodes with odd indices together followed by the nodes with even indices, and return the reordered list.  
+The first node is considered odd, and the second node is even, and so on.  
+Note that the relative order inside both the even and odd groups should remain as it was in the input.
+
+```typescript
+// typescript
+function oddEvenList(head: ListNode | null): ListNode | null {
+    if (head === null || head.next === null) {
+        return head;
+    }
+    let odd = head;
+    let even = head.next;
+    let initialEven = even;
+    let next = even.next;
+    let nextOdd = true;
+
+    while (next) {
+        if (nextOdd) {
+            odd = odd.next = next;
+        } else {
+            even = even.next = next;
+        }
+        next = next.next;
+        nextOdd = !nextOdd;
+    }
+
+    even.next = null;
+    odd.next = initialEven;
+    return head;
+};
+```
+
+### Intersection of Two Linked Lists
+
+> Given the heads of two singly linked-lists headA and headB, return the node at which the two lists intersect. If the two linked lists have no intersection at all, return null.  
+It is guaranteed that there are no cycles anywhere in the entire linked structure.  
+Note that the linked lists must retain their original structure after the function returns.
+
+Solution: Assume A list's length is i, B list's length is j, reverse A list, assume A list's reverse's head is C, now B list's length is k. i = a + 1 + c, j = b + 1 + c, k = b + 1 + a. Then we can resolve a, b and c. Reverse C list, and return intersection when reversing using value c (c equals (i + j - k - 1) / 2). Now the lists remain original.
+
+Comments: Looks like the official best solution is more understandable with O(2a + 2b + 4c + 4). But mine is more interesting with O(3a + 2b + 3c + 4). Both have no additional data structures.
+
+```typescript
+// typescript
+// a bit mess but it works ^_^
+function reverseList(head: ListNode | null, nth?: number): {head: ListNode | null, length: number, nthNode: ListNode | null} {
+    if (!head || !head.next) {
+        return {
+            head,
+            length: !head ? 0 : 1,
+            nthNode: !head ? null : nth === 1 ? head : head.next && nth === 2 ? head.next : null
+        };
+    }
+    let pA: ListNode | null = null;
+    let pB: ListNode | null = head;
+    let pC: ListNode | null = head.next;
+
+    let nthNode: ListNode | null = null;
+    let length = 1;
+    while (pC) {
+        if (length === nth) {
+            nthNode = pB;
+        }
+
+        pB.next = pA;
+        pA = pB;
+        pB = pC;
+        pC = pC.next;
+        length++;
+    }
+    if (length === nth) {
+        nthNode = pB;
+    }
+    pB.next = pA;
+
+    return {
+        head: pB,
+        length,
+        nthNode,
+    };
+};
+
+function getIntersectionNode(headA: ListNode | null, headB: ListNode | null): ListNode | null {
+    let j = 0;
+    let iterator = headB;
+    let headBEnd = headB;
+    // get headB's length
+    while (iterator) {
+        headBEnd = iterator;
+        iterator = iterator.next;
+        j++;
+    }
+    // reverse headA and get headA's length at the same time
+    iterator = headA;
+    const { length: i, head: headC } = reverseList(iterator);
+    if (headBEnd !== headC) {
+        reverseList(headC);
+        return null;
+    }
+    // get headB's length
+    let k = 0;
+    iterator = headB;
+    while (iterator) {
+        iterator = iterator.next;
+        k++;
+    }
+    // intersection is the (c + 1)th node start from headC
+    const c = (i + j - k - 1) / 2;
+    // reverse headC
+    const { nthNode } = reverseList(headC, c + 1);
+    return nthNode;
 };
 ```
