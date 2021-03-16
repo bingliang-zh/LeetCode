@@ -11,6 +11,13 @@
   - [Add Two Numbers](#add-two-numbers)
   - [Odd Even Linked List](#odd-even-linked-list)
   - [Intersection of Two Linked Lists](#intersection-of-two-linked-lists)
+- [Trees and Graphs](#trees-and-graphs)
+  - [Binary Tree Inorder Traversal](#binary-tree-inorder-traversal)
+  - [Binary Tree Zigzag Level Order Traversal](#binary-tree-zigzag-level-order-traversal)
+  - [Construct Binary Tree from Preorder and Inorder Traversal](#construct-binary-tree-from-preorder-and-inorder-traversal)
+  - [Populating Next Right Pointers in Each Node](#populating-next-right-pointers-in-each-node)
+  - [Kth Smallest Element in a BST](#kth-smallest-element-in-a-bst)
+  - [Number of Islands](#number-of-islands)
 
 ## Array and Strings
 
@@ -486,5 +493,277 @@ function getIntersectionNode(headA: ListNode | null, headB: ListNode | null): Li
     // reverse headC
     const { nthNode } = reverseList(headC, c + 1);
     return nthNode;
+};
+```
+
+## Trees and Graphs
+
+```typescript
+// typescript
+class TreeNode {
+    val: number
+    left: TreeNode | null
+    right: TreeNode | null
+    constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {
+        this.val = (val===undefined ? 0 : val)
+        this.left = (left===undefined ? null : left)
+        this.right = (right===undefined ? null : right)
+    }
+}
+```
+
+### Binary Tree Inorder Traversal
+
+> Given the root of a binary tree, return the inorder traversal of its nodes' values.
+
+```typescript
+// typescript
+function inorderTraversal(root: TreeNode | null): number[] {
+    if (!root) { return []; }
+    return [...inorderTraversal(root.left), root.val, ...inorderTraversal(root.right)];
+};
+```
+
+### Binary Tree Zigzag Level Order Traversal
+
+> Given the root of a binary tree, return the zigzag level order traversal of its nodes' values. (i.e., from left to right, then right to left for the next level and alternate between).
+
+```typescript
+// typescript
+function zigzagLevelOrder(root: TreeNode | null): number[][] {
+    const levels = new Map<number, number[]>();
+    const f = (node: TreeNode | null, level: number) => {
+        if (!node) return;
+        if (!levels.has(level)) {
+            levels.set(level, []);
+        }
+        levels.get(level).push(node.val);
+        f(node.left, level + 1);
+        f(node.right, level + 1);
+    }
+    f(root, 0);
+    const result: number[][] = [];
+    for (let i = 0; i < levels.size; i++) {
+        const arr = levels.get(i);
+        if (i % 2 === 1) {
+            arr.reverse();
+        }
+        result.push(arr);
+    }
+    return result;
+};
+```
+
+### Construct Binary Tree from Preorder and Inorder Traversal
+
+> Given two integer arrays preorder and inorder where preorder is the preorder traversal of a binary tree and inorder is the inorder traversal of the same tree, construct and return the binary tree.
+
+```typescript
+// typescript
+// solution with O(NlogN) time and O(N) space
+function buildTree(preorder: number[], inorder: number[]): TreeNode | null {
+    if (preorder.length === 0) {
+        return null;
+    }
+    const inorderMap = new Map<number, number>();
+    for (let i = 0; i < inorder.length; i++) {
+        inorderMap.set(inorder[i], i);
+    }
+    const root = new TreeNode(preorder[0]);
+
+    const insertNode = (currentIndexInInorder: number, currentValue: number, root: TreeNode) => {
+        const rootIndexInInorder = inorderMap.get(root.val);
+        if (rootIndexInInorder > currentIndexInInorder) {
+            // to left
+            if (root.left === null) {
+                root.left = new TreeNode(currentValue);
+            } else {
+                insertNode(currentIndexInInorder, currentValue, root.left);
+            }
+        } else {
+            // to right. The index is different guaranteed. No exceptions here.
+            if (root.right === null) {
+                root.right = new TreeNode(currentValue);
+            } else {
+                insertNode(currentIndexInInorder, currentValue, root.right);
+            }
+        }
+    }
+
+    for (let i = 1; i < preorder.length; i++) {
+        const currentValue = preorder[i];
+        const currentIndexInInorder = inorderMap.get(currentValue);
+        insertNode(currentIndexInInorder, currentValue, root);
+    }
+    return root;
+};
+
+// better solution with O(N) time & space
+function buildTree(preorder: number[], inorder: number[]): TreeNode | null {
+    if (preorder.length === 0) {
+        return null;
+    }
+    const inorderMap = new Map<number, number>();
+    for (let i = 0; i < inorder.length; i++) {
+        inorderMap.set(inorder[i], i);
+    }
+
+    let preorderCurrentIndex = 0;
+
+    const arrToTree = (left: number, right: number): TreeNode | null => {
+        if (left > right) return null;
+        const currentValue = preorder[preorderCurrentIndex];
+        preorderCurrentIndex++;
+        const root = new TreeNode(currentValue);
+        const rootIndex = inorderMap.get(currentValue);
+        root.left = arrToTree(left, rootIndex - 1);
+        root.right = arrToTree(rootIndex + 1, right);
+        return root;
+    }
+
+    return arrToTree(0, preorder.length - 1);
+};
+```
+
+### Populating Next Right Pointers in Each Node
+
+> You are given a perfect binary tree where all leaves are on the same level, and every parent has two children. The binary tree has the following definition:  
+struct Node {  
+  int val;  
+  Node *left;  
+  Node *right;  
+  Node *next;  
+}  
+Populate each next pointer to point to its next right node. If there is no next right node, the next pointer should be set to NULL.  
+Initially, all next pointers are set to NULL.  
+Follow up:  
+You may only use constant extra space.  
+Recursive approach is fine, you may assume implicit stack space does not count as extra space for this problem.
+
+Comments: This question's typescript template is a bit confusing with 'Node' class declared. Using javascript to verify my code.
+
+```typescript
+// typescript
+// class TreeNode {
+//     val: number
+//     left: TreeNode | null
+//     right: TreeNode | null
+//     next: TreeNode | null
+//     constructor(val?: number, left?: TreeNode, right?: TreeNode, next?: TreeNode) {
+//         this.val = (val===undefined ? 0 : val)
+//         this.left = (left===undefined ? null : left)
+//         this.right = (right===undefined ? null : right)
+//         this.next = (next===undefined ? null : next)
+//     }
+// }
+
+function connect(root: TreeNode | null): TreeNode | null {
+    if (root === null) return null;
+    if (root.left === null) return root;
+
+    for (let node = root; node !== null; node = node.next) {
+        node.left.next = node.right;
+        const next = node.next;
+        if (next) {
+            node.right.next = next.left;
+        }
+    }
+    
+    connect(root.left);
+
+    return root;
+};
+```
+
+### Kth Smallest Element in a BST
+
+> Given the root of a binary search tree, and an integer k, return the kth (1-indexed) smallest element in the tree.
+
+Solution: Inorder traversal solution is easy, skip that. The solution using a stack is better.
+
+```typescript
+// typescript
+function kthSmallest(root: TreeNode | null, k: number): number {
+    const stack: Array<TreeNode> = [];
+
+    let current = root;
+
+    while (true) {
+        while (current) {
+            stack.push(current);
+            current = current.left;
+        }
+        const focus = stack.pop();
+        k--;
+        if (k === 0) {
+            return focus.val;
+        }
+        current = focus.right;
+    }
+};
+```
+
+### Number of Islands
+
+> Given an m x n 2D binary grid grid which represents a map of '1's (land) and '0's (water), return the number of islands.  
+An island is surrounded by water and is formed by connecting adjacent lands horizontally or vertically. You may assume all four edges of the grid are all surrounded by water.  
+
+```typescript
+// typescript
+function numIslands(grid: string[][]): number {
+    let identifier = 0;
+    const identifierGroups: Map<string, string> = new Map();
+
+    const m = grid.length;
+    const n = grid[0].length;
+
+    for (let j = 0; j < m; j++) {
+        for (let i = 0; i < n; i++) {
+            if (grid[j][i] === '0') {
+                continue;
+            }
+            const left = i === 0 ? '0' : grid[j][i - 1];
+            const top = j === 0 ? '0' : grid[j - 1][i];
+            if (left === '0' && top === '0') {
+                // new identifier
+                identifier++;
+                const identifierStr = identifier.toString();
+                identifierGroups.set(identifierStr, identifierStr);
+                grid[j][i] = identifierStr;
+            } else if (left !== '0' && top === '0') {
+                grid[j][i] = grid[j][i - 1];
+            } else if (top !== '0' && left === '0') {
+                grid[j][i] = grid[j - 1][i];
+            } else {
+                const leftStr = grid[j][i - 1];
+                const topStr = grid[j - 1][i];
+                const getRootGroup = (group: string) => {
+                    while (group !== identifierGroups.get(group)) {
+                        group = identifierGroups.get(group);
+                    }
+                    return group;
+                }
+                let leftGroup = getRootGroup(leftStr);
+                let topGroup = getRootGroup(topStr);
+                
+
+                if (leftGroup === topGroup) {
+                    grid[j][i] = leftGroup;
+                } else {
+                    const smallerGroupStr = Math.min(Number(leftGroup), Number(topGroup)).toString();
+                    identifierGroups.set(leftGroup, smallerGroupStr);
+                    identifierGroups.set(topGroup, smallerGroupStr);
+                    grid[j][i] = smallerGroupStr;
+                }
+            }
+        }
+    }
+    let groupsCount = 0;
+    for (let [a, b] of identifierGroups) {
+        if (a === b) {
+            groupsCount++
+        }
+    }
+    return groupsCount;
 };
 ```
