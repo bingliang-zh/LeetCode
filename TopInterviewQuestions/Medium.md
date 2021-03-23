@@ -18,6 +18,10 @@
   - [Populating Next Right Pointers in Each Node](#populating-next-right-pointers-in-each-node)
   - [Kth Smallest Element in a BST](#kth-smallest-element-in-a-bst)
   - [Number of Islands](#number-of-islands)
+- [Backtracking](#backtracking)
+  - [Letter Combinations of a Phone Number](#letter-combinations-of-a-phone-number)
+  - [Generate Parentheses](#generate-parentheses)
+  - [Permutations](#permutations)
 
 ## Array and Strings
 
@@ -766,4 +770,148 @@ function numIslands(grid: string[][]): number {
     }
     return groupsCount;
 };
+```
+
+## Backtracking
+
+### Letter Combinations of a Phone Number
+
+> Given a string containing digits from 2-9 inclusive, return all possible letter combinations that the number could represent. Return the answer in any order.  
+A mapping of digit to letters (just like on the telephone buttons) is given below. Note that 1 does not map to any letters.
+
+```typescript
+// typescript
+function letterCombinations(digits: string): string[] {
+    if (digits === '') {
+        return [];
+    }
+    const cur = digits[0];
+    const others = digits.substr(1);
+    let curLetters: string;
+    switch (cur) {
+        case '2': curLetters = 'abc'; break;
+        case '3': curLetters = 'def'; break;
+        case '4': curLetters = 'ghi'; break;
+        case '5': curLetters = 'jkl'; break;
+        case '6': curLetters = 'mno'; break;
+        case '7': curLetters = 'pqrs'; break;
+        case '8': curLetters = 'tuv'; break;
+        case '9': curLetters = 'wxyz'; break;
+    }
+    const otherCombinations = letterCombinations(others);
+    const result = [];
+    for (let i of curLetters) {
+        if (otherCombinations.length === 0) {
+            result.push(i);
+        } else {
+            for (let j of otherCombinations) {
+                result.push(i + j);
+            }
+        }
+    }
+    return result;
+};
+```
+
+### Generate Parentheses
+
+> Given n pairs of parentheses, write a function to generate all combinations of well-formed parentheses.
+
+Comments: generate all possible combinations, then filter.
+
+```typescript
+// typescript
+
+// first try, poor-performance
+function isWellFormed(str: string): boolean {
+    const stack = [];
+    for (let i = 0; i < str.length; i++) {
+        if (str[i] === '(') {
+            stack.push(1);
+        } else {
+            if (stack.length === 0) {
+                return false;
+            } else {
+                stack.pop();
+            }
+        }
+    }
+    return stack.length === 0;
+}
+
+function generateParenthesis(n: number): string[] {
+    const generateCombinations = (remains: number, available: number): string[] => {
+        if (available === 0 || remains > available) {
+            return [];
+        }
+        if (remains === 0) {
+            let temp = '';
+            while (available > 0) {
+                temp += ')';
+                available--;
+            }
+            return [temp];
+        }
+        if (available === 1) {
+            if (remains === 1) {
+                return ['('];
+            } else {
+                return [')'];
+            }
+        } else {
+            const subCombinationsA = generateCombinations(remains - 1, available - 1).map(str => '(' + str);
+            const subCombinationsB = generateCombinations(remains, available - 1).map(str => ')' + str);
+            return subCombinationsA.concat(subCombinationsB);
+        }
+    }
+    const possibleCombinations = generateCombinations(n, 2 * n);
+    return possibleCombinations.filter(str => isWellFormed(str));
+};
+
+// backtrack method
+function generateParenthesis(n: number): string[] {
+    const result = [];
+
+    const backtrack = (currentStr: string, left: number, right: number) => {
+        if (currentStr.length === n * 2) {
+            result.push(currentStr);
+            return;
+        }
+        if (left < n) {
+            backtrack(currentStr + '(', left + 1, right);
+        }
+        if (right < left) {
+            backtrack(currentStr + ')', left, right + 1);
+        }
+    }
+
+    backtrack('', 0, 0);
+    return result;
+};
+```
+
+### Permutations
+
+> Given an array nums of distinct integers, return all the possible permutations. You can return the answer in any order.
+
+```typescript
+// typescript
+function permute(nums: number[]): number[][] {
+    const result: number[][] = [];
+
+    const backtrack = (cur: number[], available: number[]) => {
+        if (cur.length === nums.length) {
+            result.push(cur);
+            return;
+        }
+        for (let newNumber of available) {
+            backtrack(cur.concat([newNumber]), available.filter(p => p !== newNumber));
+        };
+    }
+
+    backtrack([], nums);
+
+    return result;
+};
+
 ```
