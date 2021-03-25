@@ -22,6 +22,8 @@
   - [Letter Combinations of a Phone Number](#letter-combinations-of-a-phone-number)
   - [Generate Parentheses](#generate-parentheses)
   - [Permutations](#permutations)
+  - [Subsets](#subsets)
+  - [Word Search](#word-search)
 
 ## Array and Strings
 
@@ -913,5 +915,119 @@ function permute(nums: number[]): number[][] {
 
     return result;
 };
+```
 
+### Subsets
+
+> Given an integer array nums of unique elements, return all possible subsets (the power set).  
+The solution set must not contain duplicate subsets. Return the solution in any order.  
+
+```typescript
+// typescript
+function subsets(nums: number[]): number[][] {
+  const result: number[][] = [];
+
+  const backtrack = (current: number[], nextIndex: number): void => {
+    if (nextIndex === nums.length) {
+      result.push(current);
+      return;
+    }
+
+    const nextNumber = nums[nextIndex];
+
+    backtrack([...current, nextNumber], nextIndex + 1);
+    backtrack(current, nextIndex + 1);
+  }
+
+  backtrack([], 0);
+
+  return result;
+};
+```
+
+### Word Search
+
+> Given an m x n grid of characters board and a string word, return true if word exists in the grid.  
+The word can be constructed from letters of sequentially adjacent cells, where adjacent cells are horizontally or vertically neighboring. The same letter cell may not be used more than once.  
+Note: There will be some test cases with a board or a word larger than constraints to test if your solution is using pruning.
+
+```typescript
+// typescript
+// first try
+function exist(board: string[][], word: string): boolean {
+  const m = board.length;
+  const n = board[0].length;
+
+  const backtrack = (visited: Array<string>, nextCharacterIndex: number, x: number, y: number) => {
+    if (nextCharacterIndex === word.length) {
+      return true;
+    }
+    if (x < 0 || y < 0 || x >= n || y >= m) {
+      return false;
+    }
+    if (board[y][x] !== word[nextCharacterIndex]) {
+      return false;
+    }
+    const key = [x, y].toString();
+    if (visited.indexOf(key) >= 0) {
+      return false;
+    }
+
+    visited = [...visited, key]
+    nextCharacterIndex++;
+
+    return backtrack(visited, nextCharacterIndex, x, y - 1)
+    || backtrack(visited, nextCharacterIndex, x, y + 1)
+    || backtrack(visited, nextCharacterIndex, x - 1, y)
+    || backtrack(visited, nextCharacterIndex, x + 1, y);
+  }
+
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < m; j++) {
+      const exists = backtrack([], 0, i, j);
+      if (exists) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+};
+
+// second version, mutating the original matrix
+function exist(board: string[][], word: string): boolean {
+  const m = board.length;
+  const n = board[0].length;
+
+  const backtrack = (board: string[][], nextCharacterIndex: number, x: number, y: number) => {
+    if (nextCharacterIndex === word.length) {
+      return true;
+    }
+    if (x < 0 || y < 0 || x >= n || y >= m) {
+      return false;
+    }
+    if (board[y][x] !== word[nextCharacterIndex]) {
+      return false;
+    }
+    board[y][x] = '';
+    const exists = backtrack(board, nextCharacterIndex + 1, x, y - 1)
+    || backtrack(board, nextCharacterIndex + 1, x, y + 1)
+    || backtrack(board, nextCharacterIndex + 1, x - 1, y)
+    || backtrack(board, nextCharacterIndex + 1, x + 1, y);
+
+    board[y][x] = word[nextCharacterIndex];
+    return exists;
+  }
+
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < m; j++) {
+      const exists = backtrack(board, 0, i, j);
+      if (exists) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+};
 ```
