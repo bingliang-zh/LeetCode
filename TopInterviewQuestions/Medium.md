@@ -24,6 +24,12 @@
   - [Permutations](#permutations)
   - [Subsets](#subsets)
   - [Word Search](#word-search)
+- [Sorting and Searching](#sorting-and-searching)
+  - [Sort Colors](#sort-colors)
+  - [Top K Frequent Elements](#top-k-frequent-elements)
+  - [Kth Largest Element in an Array](#kth-largest-element-in-an-array)
+  - [Find Peak Element](#find-peak-element)
+  - [Search for a Range](#search-for-a-range)
 
 ## Array and Strings
 
@@ -1030,4 +1036,280 @@ function exist(board: string[][], word: string): boolean {
 
   return false;
 };
+```
+
+## Sorting and Searching
+
+### Sort Colors
+
+> Given an array nums with n objects colored red, white, or blue, sort them in-place so that objects of the same color are adjacent, with the colors in the order red, white, and blue.  
+We will use the integers 0, 1, and 2 to represent the color red, white, and blue, respectively.  
+
+```typescript
+// typescript
+function sortColors(nums: number[]): void {
+  let lastRedIndex = -1;
+  let firstBlueIndex = nums.length;
+  let currentIndex = 0;
+
+  while (currentIndex < firstBlueIndex) {
+    let current = nums[currentIndex];
+    switch (current) {
+      case 0:
+        if (currentIndex === lastRedIndex + 1) {
+          lastRedIndex++;
+          currentIndex++;
+        } else {
+          nums[currentIndex] = nums[lastRedIndex + 1];
+          nums[lastRedIndex + 1] = 0;
+          lastRedIndex++;
+        }
+        break;
+      case 1:
+        currentIndex++;
+        break;
+      case 2:
+        nums[currentIndex] = nums[firstBlueIndex - 1];
+        nums[firstBlueIndex - 1] = 2;
+        firstBlueIndex--;
+        break;
+    }
+  }
+};
+```
+
+### Top K Frequent Elements
+
+> Given an integer array nums and an integer k, return the k most frequent elements. You may return the answer in any order.
+
+```typescript
+// typescript
+function topKFrequent(nums: number[], k: number): number[] {
+  const frequencies = new Map<number, number>();
+
+  for (let i = 0; i < nums.length; i++) {
+    const current = nums[i];
+    if (frequencies.has(current)) {
+      frequencies.set(current, frequencies.get(current) + 1);
+    } else {
+      frequencies.set(current, 1);
+    }
+  }
+
+  // use an array to cache k most frequent elements in order
+  // TODO: min heap or binary search or quicksort like algorithm could be implemented to improve performance
+  const result: Array<{num: number, frequency: number}> = [];
+  for (let [num, frequency] of frequencies) {
+    if (result.length === 0) {
+      result.push({num, frequency});
+      continue;
+    }
+    let newNode = {num, frequency};
+    for (let i = 0; i < result.length; i++) {
+      if (frequency > result[i].frequency) {
+        let temp = result[i];
+        result[i] = newNode;
+        newNode = temp;
+      }
+    }
+    if (result.length < k) {
+      result.push(newNode);
+    }
+  }
+  return result.map(v => v.num);
+};
+```
+
+### Kth Largest Element in an Array
+
+> Given an integer array nums and an integer k, return the kth largest element in the array.  
+Note that it is the kth largest element in the sorted order, not the kth distinct element.
+
+```typescript
+// typescript
+// first try, use too much new arrays, bad performance
+function findKthLargest(nums: number[], k: number): number {
+  if (nums.length === 0) {
+    return Number.NaN;
+  }
+
+  if (nums.length === 1) {
+    return nums[0];
+  }
+
+  const bigger = [];
+  const equal = [];
+  const smaller = [];
+
+  const current = nums[0];
+  for (let i = 0; i < nums.length; i++) {
+    if (nums[i] === current) {
+      equal.push(nums[i]);
+    } else if (nums[i] > current) {
+      bigger.push(nums[i]);
+    } else {
+      smaller.push(nums[i]);
+    }
+  }
+  const biggerCount = bigger.length;
+  const equalCount = equal.length;
+
+  if (k <= biggerCount) {
+    return findKthLargest(bigger, k);
+  } else if (k > biggerCount && k <= biggerCount + equalCount) {
+    return current;
+  } else {
+    return findKthLargest(smaller, k - biggerCount - equalCount);
+  }
+};
+
+// second try, implement 3 color algorithm, good space, not good performance
+function findKthLargest(nums: number[], k: number): number {
+  const swap = (indexA: number, indexB: number) => {
+    const temp = nums[indexA];
+    nums[indexA] = nums[indexB];
+    nums[indexB] = temp;
+  }
+  
+  const findKthLargestOfPart = (startIndex: number, endIndex: number) => {
+    if (startIndex > endIndex) {
+      return Number.NaN;
+    }
+    if (startIndex === endIndex) {
+      return nums[startIndex];
+    }
+    let lastBiggerIndex = startIndex - 1;
+    let firstSmallerIndex = endIndex + 1;
+    let currentIndex = startIndex;
+    const reference = nums[currentIndex];
+    while (currentIndex < firstSmallerIndex) {
+      let current = nums[currentIndex];
+      if (current > reference) {
+        if (currentIndex === lastBiggerIndex + 1) {
+          lastBiggerIndex++;
+          currentIndex++;
+        } else {
+          swap(currentIndex, lastBiggerIndex + 1);
+          lastBiggerIndex++;
+        }
+      } else if (current === reference) {
+        currentIndex++;
+      } else {
+        swap(currentIndex, firstSmallerIndex - 1);
+        firstSmallerIndex--;
+      }
+    }
+    if (k - 1 <= lastBiggerIndex) {
+      return findKthLargestOfPart(startIndex, lastBiggerIndex);
+    } else if (k - 1 < firstSmallerIndex) {
+      return reference;
+    } else {
+      return findKthLargestOfPart(firstSmallerIndex, endIndex);
+    }
+  }
+
+  return findKthLargestOfPart(0, nums.length - 1);
+};
+
+// third try, native algorithm
+function findKthLargest(nums: number[], k: number): number {
+  nums.sort((a, b) => {return b - a})
+  return nums[k - 1];
+};
+```
+
+### Find Peak Element
+
+> A peak element is an element that is strictly greater than its neighbors.  
+Given an integer array nums, find a peak element, and return its index. If the array contains multiple peaks, return the index to any of the peaks.  
+You may imagine that nums[-1] = nums[n] = -∞.  
+Constraints:  
+1 <= nums.length <= 1000  
+-231 <= nums[i] <= 231 - 1  
+nums[i] != nums[i + 1] for all valid i.  
+
+```typescript
+// typescript
+// constraints is important
+function findPeakElement(nums: number[]): number {
+  const _findPeakElement = (startIndex: number, endIndex: number) => {
+    if (startIndex === endIndex) {
+      return startIndex;
+    }
+    const middle = Math.floor((startIndex + endIndex) / 2);
+    if (nums[middle] > nums[middle + 1]) {
+      return _findPeakElement(startIndex, middle);
+    } else {
+      return _findPeakElement(middle + 1, endIndex);
+    }
+  }
+  return _findPeakElement(0, nums.length - 1);
+};
+```
+
+### Search for a Range
+
+> Given an array of integers nums sorted in ascending order, find the starting and ending position of a given target value.  
+If target is not found in the array, return [-1, -1].  
+Follow up: Could you write an algorithm with O(log n) runtime complexity?  
+
+```typescript
+// typescript
+function searchRange(nums: number[], target: number): number[] {
+  const binarySearch = (startIndex: number, endIndex: number, condition: (index: number) => number): number[] => {
+    if (startIndex > endIndex) {
+      return [-1];
+    }
+    const mid = Math.floor((startIndex + endIndex) / 2);
+    const c = condition(mid);
+    if (c === 0) {
+      return [mid, startIndex, endIndex];
+    } else if (c > 0) {
+      // search left
+      return binarySearch(startIndex, mid - 1, condition);
+    } else {
+      // search right
+      return binarySearch(mid + 1, endIndex, condition);
+    }
+  }
+
+  const [found, lastStart, lastEnd] = binarySearch(0, nums.length - 1, (i) => {return nums[i] - target});
+
+  if (found === -1) {
+    return [-1, -1];
+  }
+  const foundLeft = binarySearch(lastStart, found, (i) => {
+    if (nums[i] === target && i === lastStart) {
+      return 0;
+    }
+    const isLeft = nums[i - 1] === target;
+    const isThis = nums[i] === target;
+    if (isThis && !isLeft) {
+      return 0;
+    } else if (isThis && isLeft) {
+      return 1;
+    } else {
+      return -1;
+    }
+  })
+
+  const foundRight = binarySearch(found, lastEnd, (i) => {
+    if (nums[i] === target && i === lastEnd) {
+      return 0;
+    }
+    const isThis = nums[i] === target;
+    const isRight = nums[i + 1] === target;
+
+    if (isThis && !isRight) {
+      return 0;
+    } else if (isThis && isRight) {
+      return -1;
+    } else {
+      return 1;
+    }
+  });
+
+  return [foundLeft[0], foundRight[0]]
+};
+
 ```
