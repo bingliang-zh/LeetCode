@@ -1,4 +1,4 @@
-<https://leetcode.com/explore/interview/card/top-interview-questions-medium/>
+<https://leetco de.com/explore/interview/card/top-interview-questions-medium/>
 
 - [Array and Strings](#array-and-strings)
   - [3Sum](#3sum)
@@ -30,6 +30,9 @@
   - [Kth Largest Element in an Array](#kth-largest-element-in-an-array)
   - [Find Peak Element](#find-peak-element)
   - [Search for a Range](#search-for-a-range)
+  - [Merge Intervals](#merge-intervals)
+  - [Search in Rotated Sorted Array](#search-in-rotated-sorted-array)
+  - [Search a 2D Matrix II](#search-a-2d-matrix-ii)
 
 ## Array and Strings
 
@@ -1311,5 +1314,174 @@ function searchRange(nums: number[], target: number): number[] {
 
   return [foundLeft[0], foundRight[0]]
 };
+```
 
+### Merge Intervals
+
+> Given an array of intervals where intervals[i] = [starti, endi], merge all overlapping intervals, and return an array of the non-overlapping intervals that cover all the intervals in the input.
+
+```typescript
+// typescript
+// first try, good speed, poor memory usage
+function merge(intervals: number[][]): number[][] {
+  const arr: Array<{val: number, type: 0 | 1}> = [];
+  for (let i = 0; i < intervals.length; i++) {
+    const cur = intervals[i];
+    arr.push({val: cur[0], type: 0}, {val: cur[1], type: 1});
+  }
+  arr.sort((a, b) => {
+    const valDiff = a.val - b.val;
+    return valDiff === 0 ? a.type - b.type : valDiff;
+  });
+
+  const result: number[][] = [];
+  let remainingStartCount = 0;
+  let currentStart = 0;
+  for (let i = 0; i < arr.length; i++) {
+    const cur = arr[i];
+    if (cur.type === 0) {
+      if (remainingStartCount === 0) {
+        currentStart = cur.val;
+      }
+      remainingStartCount++;
+    } else {
+      remainingStartCount--;
+      if (remainingStartCount === 0) {
+        result.push([currentStart, cur.val]);
+      }
+    }
+  }
+  return result;
+};
+
+// second try, better memory usage
+function merge(intervals: number[][]): number[][] {
+  intervals.sort((a, b) => {
+    return a[0] - b[0];
+  });
+
+  const result: number[][] = [];
+  let lastInterval: number[] | undefined = undefined;
+
+  for (let i = 0; i < intervals.length; i++) {
+    const currentInterval = intervals[i];
+    if (lastInterval === undefined) {
+      lastInterval = currentInterval;
+    } else if (lastInterval[1] < currentInterval[0]) {
+      // push to result
+      result.push(lastInterval);
+      lastInterval = currentInterval;
+    } else {
+      lastInterval[1] = Math.max(lastInterval[1], currentInterval[1]);
+    }
+  }
+  if (lastInterval !== undefined) {
+    result.push(lastInterval);
+  }
+
+  return result;
+};
+```
+
+### Search in Rotated Sorted Array
+
+> There is an integer array nums sorted in ascending order (with distinct values).  
+Prior to being passed to your function, nums is rotated at an unknown pivot index k (0 <= k < nums.length) such that the resulting array is [nums[k], nums[k+1], ..., nums[n-1], nums[0], nums[1], ..., nums[k-1]] (0-indexed). For example, [0,1,2,4,5,6,7] might be rotated at pivot index 3 and become [4,5,6,7,0,1,2].  
+Given the array nums after the rotation and an integer target, return the index of target if it is in nums, or -1 if it is not in nums.  
+
+Comments: just a variation of binary search
+
+```typescript
+// typescript
+// TODO: can be simplified
+function search(nums: number[], target: number): number {
+  const first = nums[0];
+  const last = nums[nums.length - 1];
+
+  if (target === first) {
+    return 0;
+  } else if (target === last) {
+    return nums.length - 1;
+  }
+
+  if (target > first) {
+    // find first part
+    const binarySearch = (start: number, end: number) => {
+      if (start > end) {
+        return -1;
+      }
+      const mid = Math.floor((start + end) / 2);
+      const midValue = nums[mid];
+      if (midValue === target) {
+        return mid;
+      } else if (midValue < first || midValue > target) {
+        // find left
+        return binarySearch(start, mid - 1);
+      } else {
+        return binarySearch(mid + 1, end);
+      }
+    }
+    return binarySearch(0, nums.length - 1);
+  }
+
+  if (target < last) {
+    // find second part
+    const binarySearch = (start: number, end: number) => {
+      if (start > end) {
+        return -1;
+      }
+      const mid = Math.floor((start + end) / 2);
+      const midValue = nums[mid];
+      if (midValue === target) {
+        return mid;
+      } else if (midValue > last || midValue < target) {
+        // find right
+        return binarySearch(mid + 1, end);
+      } else {
+        return binarySearch(start, mid - 1);
+      }
+    }
+    return binarySearch(0, nums.length - 1);
+  }
+
+  return -1;
+};
+```
+
+### Search a 2D Matrix II
+
+> Write an efficient algorithm that searches for a target value in an m x n integer matrix. The matrix has the following properties:  
+Integers in each row are sorted in ascending from left to right.  
+Integers in each column are sorted in ascending from top to bottom.  
+
+```typescript
+// typescript
+function searchMatrix(matrix: number[][], target: number): boolean {
+  const m = matrix.length;
+  const n = matrix[0].length;
+
+  let i = n - 1;
+  let j = 0;
+  // start from the right upper corner
+  while (true) {
+    const current = matrix[j][i];
+    if (current === target) {
+      return true;
+    }
+    if (current > target) {
+      if (i === 0) {
+        return false;
+      } else {
+        i--;
+      }
+    } else {
+      // move to next line
+      if (j === m - 1) {
+        return false;
+      } else {
+        j++;
+      }
+    }
+  }
+};
 ```
