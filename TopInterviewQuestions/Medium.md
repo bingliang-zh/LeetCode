@@ -1,4 +1,4 @@
-<https://leetco de.com/explore/interview/card/top-interview-questions-medium/>
+<https://leetcode.com/explore/interview/card/top-interview-questions-medium/>
 
 - [Array and Strings](#array-and-strings)
   - [3Sum](#3sum)
@@ -33,6 +33,11 @@
   - [Merge Intervals](#merge-intervals)
   - [Search in Rotated Sorted Array](#search-in-rotated-sorted-array)
   - [Search a 2D Matrix II](#search-a-2d-matrix-ii)
+- [Dynamic Programming](#dynamic-programming)
+  - [Jump Game](#jump-game)
+  - [Unique Paths](#unique-paths)
+  - [Coin Change](#coin-change)
+  - [Longest Increasing Subsequence](#longest-increasing-subsequence)
 
 ## Array and Strings
 
@@ -1484,4 +1489,179 @@ function searchMatrix(matrix: number[][], target: number): boolean {
     }
   }
 };
+```
+
+## Dynamic Programming
+
+### Jump Game
+
+> Given an array of non-negative integers nums, you are initially positioned at the first index of the array.  
+Each element in the array represents your maximum jump length at that position.  
+Determine if you are able to reach the last index.  
+
+Comments: the official 'Greedy' solution is genius.
+
+```typescript
+// typescript
+function canJump(nums: number[]): boolean {
+  if (nums.length === 1) return true;
+  const iterate = (index: number) => {
+    const maxJumps = nums[index];
+    // -1 is visited
+    if (maxJumps === 0 || maxJumps === -1) {
+      return false;
+    }
+    nums[index] = -1;
+    if (index + maxJumps >= nums.length - 1) {
+      return true;
+    }
+    for (let i = 1; i <= maxJumps; i++) {
+      const possible = iterate(index + i);
+      if (possible) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  return iterate(0);
+};
+```
+
+### Unique Paths
+
+> A robot is located at the top-left corner of a m x n grid (marked 'Start' in the diagram below).  
+The robot can only move either down or right at any point in time. The robot is trying to reach the bottom-right corner of the grid (marked 'Finish' in the diagram below).  
+How many possible unique paths are there?
+
+Comments: looks like a Pascal's Triangle（杨辉三角形）.
+
+```typescript
+// typescript
+function uniquePaths(m: number, n: number): number {
+  const rows = Math.max(m, n);
+  const columns = Math.min(m, n); // reduce memory usage
+
+  let lastRow = new Array(columns).fill(1);
+  for (let j = 1; j < rows; j++) {
+    const currentRow = new Array(columns);
+    currentRow[0] = 1;
+    for (let i = 1; i < columns; i++) {
+      currentRow[i] = currentRow[i - 1] + lastRow[i];
+    }
+    lastRow = currentRow;
+  }
+  return lastRow[lastRow.length - 1];
+};
+```
+
+### Coin Change
+
+> You are given an integer array coins representing coins of different denominations and an integer amount representing a total amount of money.  
+Return the fewest number of coins that you need to make up that amount. If that amount of money cannot be made up by any combination of the coins, return -1.  
+You may assume that you have an infinite number of each kind of coin.  
+
+```typescript
+// typescript
+// first try, exceed time limit at some case
+function coinChange(coins: number[], amount: number): number {
+  let result = Number.MAX_VALUE;
+
+  const backtrack = (countedNumber: number, remainsAmount: number, maxDenominationIndex: number) => {
+    if (remainsAmount === 0) {
+      if (countedNumber < result) {
+        result = countedNumber;
+      }
+      return;
+    }
+    if (maxDenominationIndex === -1) {
+      return;
+    }
+    const currentDenomination = coins[maxDenominationIndex];
+
+    for (let i = Math.floor(remainsAmount / currentDenomination); i >= 0; i--) {
+      backtrack(countedNumber + i, remainsAmount - i * currentDenomination, maxDenominationIndex - 1);
+    }
+  }
+
+  backtrack(0, amount, coins.length - 1);
+
+  return result === Number.MAX_VALUE ? -1 : result;
+};
+
+// second try
+function coinChange(coins: number[], amount: number): number {
+  const counts: Array<number | undefined> = new Array(amount).fill(undefined);
+  counts[0] = 0;
+
+  const countOfAmount = (amount: number) => {
+    if (amount < 0) {
+      return;
+    }
+    if (counts[amount] !== undefined) {
+      return counts[amount];
+    }
+    let minCount = Number.MAX_VALUE;
+    for (let i = 0; i < coins.length; i++) {
+      const subCount = countOfAmount(amount - coins[i]);
+      if (subCount === -1) {
+        continue;
+      }
+      if (minCount > subCount + 1) {
+        minCount = subCount + 1;
+      }
+    }
+    counts[amount] = minCount === Number.MAX_VALUE ? -1 : minCount;
+    return counts[amount];
+  }
+
+  countOfAmount(amount);
+
+  return counts[counts.length - 1] !== undefined ? counts[counts.length - 1] : -1;
+};
+```
+
+### Longest Increasing Subsequence
+
+> Given an integer array nums, return the length of the longest strictly increasing subsequence.  
+A subsequence is a sequence that can be derived from an array by deleting some or no elements without changing the order of the remaining elements. For example, [3,6,2,7] is a subsequence of the array [0,3,1,6,2,2,7].  
+
+```typescript
+// typescript
+// first try, changing map to array will improve performance a bit
+function lengthOfLIS(nums: number[]): number {
+  const cache = new Map<number, number>(); // sequence length, minimal end amount sequence with same length
+
+  for (let i = 0; i < nums.length; i++) {
+    let newCache = new Map<number, number>();
+    const current = nums[i];
+    newCache.set(1, current);
+    for (let [l, end] of cache) {
+      if (current > end) {
+        newCache.set(l + 1, current);
+      }
+    }
+
+    // merge caches
+    for (let [l, end] of newCache) {
+      if (!cache.has(l)) {
+        cache.set(l, end);
+      } else {
+        if (end < cache.get(l)) {
+          cache.set(l, end)
+        }
+      }
+    }
+  }
+
+  let maxLength = 0;
+
+  for (let [l, e] of cache) {
+    if (l > maxLength) {
+      maxLength = l;
+    }
+  }
+  return maxLength;
+};
+// TODO: O(nlog(n)) time complexity solution
 ```
