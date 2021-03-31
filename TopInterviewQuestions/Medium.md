@@ -38,6 +38,9 @@
   - [Unique Paths](#unique-paths)
   - [Coin Change](#coin-change)
   - [Longest Increasing Subsequence](#longest-increasing-subsequence)
+- [Design](#design)
+  - [Serialize and Deserialize Binary Tree](#serialize-and-deserialize-binary-tree)
+  - [Insert Delete GetRandom O(1)](#insert-delete-getrandom-o1)
 
 ## Array and Strings
 
@@ -1664,4 +1667,110 @@ function lengthOfLIS(nums: number[]): number {
   return maxLength;
 };
 // TODO: O(nlog(n)) time complexity solution
+```
+
+## Design
+
+### Serialize and Deserialize Binary Tree
+
+> Serialization is the process of converting a data structure or object into a sequence of bits so that it can be stored in a file or memory buffer, or transmitted across a network connection link to be reconstructed later in the same or another computer environment.  
+Design an algorithm to serialize and deserialize a binary tree. There is no restriction on how your serialization/deserialization algorithm should work. You just need to ensure that a binary tree can be serialized to a string and this string can be deserialized to the original tree structure.  
+Clarification: The input/output format is the same as how LeetCode serializes a binary tree. You do not necessarily need to follow this format, so please be creative and come up with different approaches yourself.  
+
+```typescript
+// typescript
+function serialize(root: TreeNode | null): string {
+    const arr: number[][] = [];
+
+    const traverse = (node: TreeNode | null): number => {
+        if (node === null) {
+            return -1;
+        }
+        const index = arr.length;
+        arr.push([node.val, -1, -1]);
+        const leftIndex = traverse(node.left);
+        const rightIndex = traverse(node.right);
+        arr[index][1] = leftIndex;
+        arr[index][2] = rightIndex;
+        return index;
+    }
+    traverse(root);
+
+    return arr.toString();
+};
+
+function deserialize(data: string): TreeNode | null {
+    if (data.length === 0) {
+        return null;
+    }
+    const arr: number[] = data.split(',').map(c => Number(c));
+    
+    const parse = (index: number): TreeNode | null => {
+        if (index === -1) {
+            return null;
+        }
+        const indexV = 3 * index;
+        const indexL = indexV + 1;
+        const indexR = indexL + 1;
+
+        const val = arr[indexV];
+        const left = parse(arr[indexL]);
+        const right = parse(arr[indexR]);
+        return new TreeNode(val, left, right);
+    }
+
+    return parse(0);
+};
+```
+
+### Insert Delete GetRandom O(1)
+
+> Implement the RandomizedSet class:  
+RandomizedSet() Initializes the RandomizedSet object.  
+bool insert(int val) Inserts an item val into the set if not present. Returns true if the item was not present, false otherwise.  
+bool remove(int val) Removes an item val from the set if present. Returns true if the item was present, false otherwise.  
+int getRandom() Returns a random element from the current set of elements (it's guaranteed that at least one element exists when this method is called). Each element must have the same probability of being returned.  
+
+```typescript
+// typescript
+class RandomizedSet {
+    map: Map<number, number>; // value, index in array
+    arr: number[];
+
+    constructor() {
+        this.map = new Map();
+        this.arr = [];
+    }
+
+    insert(val: number): boolean {
+        if (this.map.has(val)) {
+            // existed
+            return false;
+        }
+        const index = this.arr.length;
+        this.arr.push(val);
+        this.map.set(val, index);
+        return true;
+    }
+
+    remove(val: number): boolean {
+        if (!this.map.has(val)) {
+            return false;
+        }
+        const index = this.map.get(val);
+        this.map.delete(val);
+        if (this.arr.length - 1 === index) {
+            this.arr.pop();
+        } else {
+            this.arr[index] = this.arr.pop();
+            this.map.set(this.arr[index], index);
+        }
+        return true;
+    }
+
+    getRandom(): number {
+        const index = Math.floor(Math.random() * this.arr.length);
+        return this.arr[index];
+    }
+}
 ```
