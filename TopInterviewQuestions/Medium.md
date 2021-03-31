@@ -41,6 +41,14 @@
 - [Design](#design)
   - [Serialize and Deserialize Binary Tree](#serialize-and-deserialize-binary-tree)
   - [Insert Delete GetRandom O(1)](#insert-delete-getrandom-o1)
+- [Math](#math)
+  - [Happy Number](#happy-number)
+  - [Factorial Trailing Zeroes](#factorial-trailing-zeroes)
+  - [Excel Sheet Column Number](#excel-sheet-column-number)
+  - [Pow(x, n)](#powx-n)
+  - [Sqrt(x)](#sqrtx)
+  - [Divide Two Integers](#divide-two-integers)
+  - [Fraction to Recurring Decimal](#fraction-to-recurring-decimal)
 
 ## Array and Strings
 
@@ -284,7 +292,7 @@ function longestPalindrome(s: string): string {
 
 > Given an integer array nums, return true if there exists a triple of indices (i, j, k) such that i < j < k and nums[i] < nums[j] < nums[k]. If no such indices exists, return false.
 
-Comments: failed. Get the solution and explanation from web. <https://leetcode.com/problems/increasing-triplet-subsequence/discuss/79004/Concise-Java-solution-with-comments.>
+Comments: Failed. Get the solution and explanation from web. <https://leetcode.com/problems/increasing-triplet-subsequence/discuss/79004/Concise-Java-solution-with-comments.>
 
 `I would like to point out that for [1, 3, 0, 5] we will eventually arrive at big = 3 and small = 0 so big may come after small. However, the solution still works, because big only gets updated when there exists a small that comes before it. -leetcode_deleted_user`
 
@@ -836,7 +844,7 @@ function letterCombinations(digits: string): string[] {
 
 > Given n pairs of parentheses, write a function to generate all combinations of well-formed parentheses.
 
-Comments: generate all possible combinations, then filter.
+Comments: Generate all possible combinations, then filter.
 
 ```typescript
 // typescript
@@ -1397,7 +1405,7 @@ function merge(intervals: number[][]): number[][] {
 Prior to being passed to your function, nums is rotated at an unknown pivot index k (0 <= k < nums.length) such that the resulting array is [nums[k], nums[k+1], ..., nums[n-1], nums[0], nums[1], ..., nums[k-1]] (0-indexed). For example, [0,1,2,4,5,6,7] might be rotated at pivot index 3 and become [4,5,6,7,0,1,2].  
 Given the array nums after the rotation and an integer target, return the index of target if it is in nums, or -1 if it is not in nums.  
 
-Comments: just a variation of binary search
+Comments: Just a variation of binary search
 
 ```typescript
 // typescript
@@ -1502,7 +1510,7 @@ function searchMatrix(matrix: number[][], target: number): boolean {
 Each element in the array represents your maximum jump length at that position.  
 Determine if you are able to reach the last index.  
 
-Comments: the official 'Greedy' solution is genius.
+Comments: The official 'Greedy' solution is genius.
 
 ```typescript
 // typescript
@@ -1537,7 +1545,7 @@ function canJump(nums: number[]): boolean {
 The robot can only move either down or right at any point in time. The robot is trying to reach the bottom-right corner of the grid (marked 'Finish' in the diagram below).  
 How many possible unique paths are there?
 
-Comments: looks like a Pascal's Triangle（杨辉三角形）.
+Comments: Looks like a Pascal's Triangle（杨辉三角形）.
 
 ```typescript
 // typescript
@@ -1774,3 +1782,175 @@ class RandomizedSet {
     }
 }
 ```
+
+## Math
+
+### Happy Number
+
+> Write an algorithm to determine if a number n is happy.  
+A happy number is a number defined by the following process:  
+Starting with any positive integer, replace the number by the sum of the squares of its digits.  
+Repeat the process until the number equals 1 (where it will stay), or it loops endlessly in a cycle which does not include 1.  
+Those numbers for which this process ends in 1 are happy.  
+Return true if n is a happy number, and false if not.  
+
+```typescript
+// typescript
+function isHappy(n: number): boolean {
+    const set = new Set();
+
+    const calc = (n: number) => {
+        let sum = 0;
+        while (n > 0) {
+            const remains = n % 10;
+            n = Math.floor(n / 10);
+            sum += remains * remains;
+        }
+        return sum;
+    }
+
+    while (true) {
+        if (n === 1) {
+            return true;
+        }
+        if (set.has(n)) {
+            return false;
+        }
+        set.add(n);
+        n = calc(n);
+    }
+};
+```
+
+### Factorial Trailing Zeroes
+
+> Given an integer n, return the number of trailing zeroes in n!.  
+Follow up: Could you write a solution that works in logarithmic time complexity?  
+
+```typescript
+// typescript
+function trailingZeroes(n: number): number {
+    let count = 0;
+    while (n > 0) {
+        let temp = Math.floor(n / 5);
+        count += temp;
+        n = temp;
+    }
+    return count;
+};
+```
+
+### Excel Sheet Column Number
+
+> Given a string columnTitle that represents the column title as appear in an Excel sheet, return its corresponding column number.
+
+```typescript
+// typescript
+function titleToNumber(columnTitle: string): number {
+    const charCodeBase = 'A'.charCodeAt(0) - 1;
+    let sum = 0;
+    for (let multiplier = 1, index = columnTitle.length - 1;
+        index >= 0;
+        multiplier *= 26, index--) {
+        sum += (columnTitle.charCodeAt(index) - charCodeBase) * multiplier;
+    }
+    return sum;
+};
+```
+
+### Pow(x, n)
+
+> Implement pow(x, n), which calculates x raised to the power n (i.e., xn).
+
+```typescript
+// typescript
+// first try, Time Limit Exceeded
+function myPow(x: number, n: number): number {
+    if (n === 0) return 1;
+    let isPositive = true;
+    if (n < 0) {
+        isPositive = false;
+        n = -n;
+    }
+
+    let result = 1;
+
+    while (n > 0) {
+        result *= x;
+        n--;
+    }
+
+    return isPositive ? result : 1 / result;
+};
+// second try, x ^ 2k = x ^ k * x ^ k, x ^ (2k + 1) = x ^ k * x ^ k * x
+function myPow(x: number, n: number): number {
+    if (n === 0) return 1;
+    let isPositive = true;
+    if (n < 0) {
+        isPositive = false;
+        n = -n;
+    }
+
+    const pow = (x: number, n: number) => {
+        if (n === 0) return 1;
+        const subPow = pow(x, Math.floor(n / 2));
+        return subPow * subPow * (n % 2 === 1 ? x : 1);
+    }
+
+    const result = pow(x, n);
+
+    return isPositive ? result : 1 / result;
+};
+```
+
+### Sqrt(x)
+
+> Given a non-negative integer x, compute and return the square root of x.  
+Since the return type is an integer, the decimal digits are truncated, and only the integer part of the result is returned.  
+
+Comments: Basically a binary search.
+
+```typescript
+// typescript
+function mySqrt(x: number): number {
+    let min = 1;
+    let max = x;
+
+    while (true) {
+        let possible = Math.floor((min + max) / 2);
+
+        const a = possible * possible;
+        const b = (possible + 1) * (possible + 1);
+        if (a <= x && x < b) {
+            return possible;
+        }
+        if (x < a) {
+            max = possible - 1;
+        } else {
+            min = possible + 1;
+        }
+    }
+};
+```
+
+### Divide Two Integers
+
+> Given two integers dividend and divisor, divide two integers without using multiplication, division, and mod operator.  
+Return the quotient after dividing dividend by divisor.  
+The integer division should truncate toward zero, which means losing its fractional part. For example, truncate(8.345) = 8 and truncate(-2.7335) = -2.  
+Note: Assume we are dealing with an environment that could only store integers within the 32-bit signed integer range: [−231, 231 − 1]. For this problem, assume that your function returns 231 − 1 when the division result overflows.  
+
+Comments: It's a bit boring. Skipping.
+
+```typescript
+// TODO
+```
+
+### Fraction to Recurring Decimal
+
+> Given two integers representing the numerator and denominator of a fraction, return the fraction in string format.  
+If the fractional part is repeating, enclose the repeating part in parentheses.  
+If multiple answers are possible, return any of them.  
+It is guaranteed that the length of the answer string is less than 104 for all the given inputs.  
+
+Comments: A bit boring too. Skipping.
