@@ -49,6 +49,11 @@
   - [Sqrt(x)](#sqrtx)
   - [Divide Two Integers](#divide-two-integers)
   - [Fraction to Recurring Decimal](#fraction-to-recurring-decimal)
+- [Others](#others)
+  - [Sum of Two Integers](#sum-of-two-integers)
+  - [Evaluate Reverse Polish Notation](#evaluate-reverse-polish-notation)
+  - [Majority Element](#majority-element)
+  - [Task Scheduler](#task-scheduler)
 
 ## Array and Strings
 
@@ -1954,3 +1959,114 @@ If multiple answers are possible, return any of them.
 It is guaranteed that the length of the answer string is less than 104 for all the given inputs.  
 
 Comments: A bit boring too. Skipping.
+
+## Others
+
+### Sum of Two Integers
+
+> Given two integers a and b, return the sum of the two integers without using the operators + and -.
+
+Comments: Use binary operations. Skipping.
+
+### Evaluate Reverse Polish Notation
+
+> Evaluate the value of an arithmetic expression in Reverse Polish Notation.  
+Valid operators are +, -, *, and /. Each operand may be an integer or another expression.  
+Note that division between two integers should truncate toward zero.  
+It is guaranteed that the given RPN expression is always valid. That means the expression would always evaluate to a result, and there will not be any division by zero operation.  
+
+```typescript
+// typescript
+function evalRPN(tokens: string[]): number {
+    const stack: number[] = [];
+    for (let i = 0; i < tokens.length; i++) {
+        const current = tokens[i];
+        let b: number;
+        switch (current) {
+            case '+':
+                b = stack.pop();
+                stack[stack.length - 1] = stack[stack.length - 1] + b;
+                break;
+            case '-':
+                b = stack.pop();
+                stack[stack.length - 1] = stack[stack.length - 1] - b;
+                break;
+            case '*':
+                b = stack.pop();
+                stack[stack.length - 1] = stack[stack.length - 1] * b;
+                break;
+            case '/':
+                b = stack.pop();
+                const v = stack[stack.length - 1] / b;
+                stack[stack.length - 1] = v < 0 ? Math.ceil(v) : Math.floor(v);
+                break;
+            default: stack.push(Number(current));
+        }
+    }
+    return stack[0];
+};
+```
+
+### Majority Element
+
+> Given an array nums of size n, return the majority element.  
+The majority element is the element that appears more than ⌊n / 2⌋ times. You may assume that the majority element always exists in the array.  
+
+```typescript
+// typescript
+function majorityElement(nums: number[]): number {
+    let currentMajor: number;
+    let majorCount = 0;
+    
+    for (let i = 0; i < nums.length; i++) {
+        if (majorCount === 0) {
+            currentMajor = nums[i];
+            majorCount++;
+        } else if (nums[i] === currentMajor) {
+            majorCount++;
+        } else {
+            majorCount--;
+        }
+    }
+    return currentMajor;
+};
+```
+
+### Task Scheduler
+
+> Given a characters array tasks, representing the tasks a CPU needs to do, where each letter represents a different task. Tasks could be done in any order. Each task is done in one unit of time. For each unit of time, the CPU could complete either one task or just be idle.  
+However, there is a non-negative integer n that represents the cooldown period between two same tasks (the same letter in the array), that is that there must be at least n units of time between any two same tasks.  
+Return the least number of units of times that the CPU will take to finish all the given tasks.  
+
+```typescript
+// typescript
+// I can't figure that out by myself, see this for help: <https://leetcode.com/explore/interview/card/top-interview-questions-medium/114/others/826/discuss/104500/Java-O(n)-time-O(1)-space-1-pass-no-sorting-solution-with-detailed-explanation>
+function leastInterval(tasks: string[], n: number): number {
+    const map = new Map<string, number>();
+    for (let task of tasks) {
+        if (map.has(task)) {
+            map.set(task, map.get(task) + 1);
+        } else {
+            map.set(task, 1);
+        }
+    }
+
+    let max: number = 0;
+    let maxCount: number = 0;
+    for (let [, count] of map) {
+        if (max < count) {
+            max = count;
+            maxCount = 1;
+        } else if (max === count) {
+            maxCount++;
+        }
+    }
+
+    const slots = (max - 1) * (n - (maxCount -1));
+    const remains = tasks.length - maxCount * max;
+    // this is tricky
+    const empties = remains < slots ? slots - remains : 0;
+
+    return empties + tasks.length;
+};
+```
