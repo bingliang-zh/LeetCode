@@ -1360,6 +1360,7 @@ function maxProfit(prices: number[]): number {
     }
     return bestProfit;
 };
+// see [Category - Dynamic Programming](Categories/DynamicProgramming.md) for better solution
 ```
 
 ### Maximum Subarray
