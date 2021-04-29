@@ -1679,7 +1679,39 @@ function lengthOfLIS(nums: number[]): number {
   }
   return maxLength;
 };
-// TODO: O(nlog(n)) time complexity solution
+
+// Patience sorting
+function lengthOfLIS(nums: number[]): number {
+    // [9,2,5,1,3,7]
+    // [9]
+    // [2]
+    // [2, 5]
+    // [1, 5]
+    // [1, 3]
+    // [1, 3, 7]
+    const maxCache: number[] = [];
+
+    for (let num of nums) {
+        if (maxCache.length === 0) {
+            maxCache.push(num);
+            continue;
+        }
+        let flag = false;
+        for (let i = 0; i < maxCache.length; i++) {
+            // TODO: implement binary search
+            if (maxCache[i] >= num) {
+                maxCache[i] = num;
+                flag = true;
+                break;
+            }
+        }
+        if (!flag) {
+            maxCache.push(num);
+        }
+    }
+
+    return maxCache.length;
+}
 ```
 
 ## Design
