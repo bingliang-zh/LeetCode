@@ -14,6 +14,9 @@
   - [338. Counting Bits](#338-counting-bits)
   - [1043. Partition Array for Maximum Sum](#1043-partition-array-for-maximum-sum)
   - [1130. Minimum Cost Tree From Leaf Values](#1130-minimum-cost-tree-from-leaf-values)
+  - [877. Stone Game](#877-stone-game)
+  - [1140. Stone Game II](#1140-stone-game-ii)
+  - [322. Coin Change](#322-coin-change)
 
 All code written in typescript.
 
@@ -610,5 +613,137 @@ function mctFromLeafValues(arr: number[]): number {
         costSum += stack.pop() * stack[stack.length - 1];
     }
     return costSum;
+};
+```
+
+### 877. Stone Game
+
+Alex and Lee play a game with piles of stones.  There are an even number of piles arranged in a row, and each pile has a positive integer number of stones piles[i].
+
+The objective of the game is to end with the most stones.  The total number of stones is odd, so there are no ties.
+
+Alex and Lee take turns, with Alex starting first.  Each turn, a player takes the entire pile of stones from either the beginning or the end of the row.  This continues until there are no more piles left, at which point the person with the most stones wins.
+
+Assuming Alex and Lee play optimally, return True if and only if Alex wins the game.
+
+```ts
+// first try
+function stoneGame(p: number[]): boolean {
+    // f(i, j) => stones sum
+    // f(i, i) => p[i]
+    // f(i, i+1) => max(p[i], p[i+1])
+    // f(i, j) => max(
+    //     p[i] + min(f(i+1, j-1), f(i+2, j)),
+    //     p[j] + min(f(i+1, j-1), f(i, j-2))
+    // )
+    const n = p.length;
+    const dp: Array<number[]> = new Array(n);
+    for (let i = 0; i < n; i++) {
+        dp[i] = new Array(n).fill(0);
+    }
+
+    const DP = (i: number, j: number): number => {
+        if (i === j) return p[i];
+        if (i > j) return DP(j, i);
+        if (i + 1 === j) return Math.max(p[i], p[j]);
+
+        if (dp[j][i] !== 0) return dp[j][i];
+        dp[j][i] = Math.max(
+            p[i] + Math.min(DP(i+1, j-1), DP(i+2, j)),
+            p[j] + Math.min(DP(i+1, j-1), DP(i, j-2))
+        );
+        return dp[j][i];
+    }
+
+    return DP(0, n - 1) > Math.min(DP(0, n - 2), DP(1, n - 1))
+};
+```
+
+[lee215's solution](https://leetcode.com/problems/stone-game/discuss/154610/DP-or-Just-return-true)
+```ts
+// if (sum(p[even]) > sum(p[odd])) pick even, else pick odd
+function stoneGame(p: number[]): boolean {
+    return true;
+};
+```
+
+### 1140. Stone Game II
+
+Alice and Bob continue their games with piles of stones.  There are a number of piles arranged in a row, and each pile has a positive integer number of stones piles[i].  The objective of the game is to end with the most stones. 
+
+Alice and Bob take turns, with Alice starting first.  Initially, M = 1.
+
+On each player's turn, that player can take all the stones in the first X remaining piles, where 1 <= X <= 2M.  Then, we set M = max(M, X).
+
+The game continues until all the stones have been taken.
+
+Assuming Alice and Bob play optimally, return the maximum number of stones Alice can get.
+
+```ts
+function stoneGameII(p: number[]): number {
+    const n = p.length;
+    const map: Map<string, number> = new Map; // "i,M" => maxPossibleStoneCount
+    const sums = new Array<number>(n); // 从结尾到i（含）的总和
+
+    sums[n - 1] = p[n - 1];
+    for (let i = n - 2; i >= 0; i--) {
+        sums[i] = p[i] + sums[i + 1];
+    }
+
+    const DP = (i: number, M: number) => {
+        if ((i + 2 * M) >= n) return sums[i]; // pick all rest piles
+        const key = i + ',' + M;
+        if (map.has(key)) return map.get(key);
+        let max = 0;
+
+        for (let X = 1; X <= 2 * M; X++) {
+            const current = sums[i] - DP(i+X, Math.max(M, X)); // Eureka!
+            if (current > max) {
+                max = current;
+            }
+        }
+
+        map.set(key, max);
+        return max;
+    }
+
+    return DP(0, 1);
+};
+```
+
+### 322. Coin Change
+
+You are given an integer array coins representing coins of different denominations and an integer amount representing a total amount of money.
+
+Return the fewest number of coins that you need to make up that amount. If that amount of money cannot be made up by any combination of the coins, return -1.
+
+You may assume that you have an infinite number of each kind of coin.
+
+```ts
+function coinChange(coins: number[], amount: number): number {
+    // const dp: Map<number, number> = new Map; // amount -> fewest number of coins
+    const dp: Array<number | undefined> = new Array(amount + 1).fill(undefined);
+
+    const DP = (amount: number): number => {
+        if (amount < 0) return -1;
+        if (amount === 0) return 0;
+        if (dp[amount] !== undefined) return dp[amount];
+
+        let min = Number.MAX_VALUE;
+        for (let i = 0; i < coins.length; i++) {
+            const subDP = DP(amount - coins[i]);
+            if (subDP === -1) {
+                continue;
+            }
+            if (subDP < min) {
+                min = subDP;
+            }
+        }
+        const subMin = min === Number.MAX_VALUE ? -1 : min + 1;
+        dp[amount] = subMin;
+        return subMin;
+    }
+
+    return DP(amount);
 };
 ```
