@@ -240,3 +240,377 @@ function spiralOrder(matrix: number[][]): number[] {
     return result;
 };
 ```
+
+## Linked List
+
+```ts
+class ListNode {
+    val: number
+    next: ListNode | null
+    constructor(val?: number, next?: ListNode | null) {
+        this.val = (val===undefined ? 0 : val)
+        this.next = (next===undefined ? null : next)
+    }
+}
+```
+
+### Reverse Linked List
+
+Given the head of a singly linked list, reverse the list, and return the reversed list.
+
+```ts
+function reverseList(head: ListNode | null): ListNode | null {
+    let a = null;
+    let b = head;
+
+    while (b) {
+        const temp = b.next;
+        b.next = a;
+        a = b;
+        b = temp;
+    }
+
+    return a;
+};
+```
+
+### Linked List Cycle
+
+Given head, the head of a linked list, determine if the linked list has a cycle in it.
+
+There is a cycle in a linked list if there is some node in the list that can be reached again by continuously following the next pointer. Internally, pos is used to denote the index of the node that tail's next pointer is connected to. Note that pos is not passed as a parameter.
+
+Return true if there is a cycle in the linked list. Otherwise, return false.
+
+```ts
+function hasCycle(head: ListNode | null): boolean {
+    if (head === null) return false;
+    if (head.next === null) return false;
+    let fast = head.next;
+    let slow = head;
+    while (fast) {
+        if (slow === fast) {
+            return true;
+        }
+        slow = slow.next;
+        if (fast.next && fast.next.next) {
+            fast = fast.next.next;
+        } else {
+            return false;
+        }
+    }
+};
+```
+
+### Add Two Numbers
+
+Skip.
+
+### Add Two Numbers II
+
+Skip.
+
+### Merge Two Sorted Lists
+
+Skip.
+
+### Merge k Sorted Lists
+
+Skip.
+
+### Intersection of Two Linked Lists
+
+```ts
+function getIntersectionNode(headA: ListNode | null, headB: ListNode | null): ListNode | null {
+    const stackA = [];
+    const stackB = [];
+    while (headA) {
+        stackA.push(headA);
+        headA = headA.next;
+    }
+    while (headB) {
+        stackB.push(headB);
+        headB = headB.next;
+    }
+    if (stackA.length === 0 || stackB.length === 0) return null;
+    let intersection = null;
+    for (let i = stackA.length - 1, j = stackB.length - 1; i >= 0 && j >= 0; i--, j--) {
+        if (stackA[i] === stackB[j]) {
+            intersection = stackA[i];
+        } else { break; }
+    }
+    return intersection;
+};
+```
+
+### 138. Copy List with Random Pointer
+
+```ts
+class ListNode {
+    val: number
+    next: ListNode | null
+    random: ListNode | null
+    constructor(val?: number, next?: ListNode, random?: ListNode) {
+        this.val = (val===undefined ? 0 : val)
+        this.next = (next===undefined ? null : next)
+        this.random = (random===undefined ? null : random)
+    }
+}
+function copyRandomList(head: ListNode) {
+    if (head === null) return null;
+    let it = head;
+    while (it) {
+        // a->b => a->a'->b->b'
+        const copy = new ListNode(it.val, it.next);
+        it.next = copy;
+        it = copy.next;
+    }
+    it = head;
+    while (it) {
+        // maintain random pointer
+        const copy = it.next;
+        copy.random = it.random ? it.random.next : null;
+        it = copy.next;
+    }
+    const result = head.next;
+    it = head;
+
+    while (it) {
+        const copy = it.next;
+        it.next = copy.next;
+        copy.next = copy.next ? copy.next.next : null;
+        it = it.next;
+    }
+    return result;
+};
+```
+
+## Trees and Graphs
+
+```ts
+class TreeNode {
+    val: number
+    left: TreeNode | null
+    right: TreeNode | null
+    constructor(val?: number, left?: TreeNode | null, right?: TreeNode | null) {
+        this.val = (val===undefined ? 0 : val)
+        this.left = (left===undefined ? null : left)
+        this.right = (right===undefined ? null : right)
+    }
+}
+```
+
+### Validate Binary Search Tree
+
+```ts
+function isValidBST(root: TreeNode | null): boolean {
+    // isValidBST -> left is Valid, right is valid, left.max < root.val < right.min
+    const _IsValidBST = (node: TreeNode | null): {valid: boolean, min: number | null, max: number | null} => {
+        if (node === null) return {valid: true, min: null, max: null};
+        const left = _IsValidBST(node.left);
+        const right = _IsValidBST(node.right);
+        const leftValidInVal = left.max === null ? true : left.max < node.val;
+        const rightValidInVal = right.min === null ? true : node.val < right.min;
+        return {
+            valid: left.valid && right.valid && leftValidInVal && rightValidInVal,
+            min: left.min || node.val,
+            max: right.max || node.val,
+        }
+    }
+    return _IsValidBST(root).valid;
+};
+```
+
+Verify whether the inorder traversal is strictly ascending is another method.
+
+# TODO!!!: network is bad, revisit best solutions after.
+
+### Binary Tree Inorder Traversal
+
+Skip. Inorder(p) = [...Inorder(p.left), p.v, ...Inorder(p.right)];
+
+Use a stack with DFS is a iterative method.
+
+### Binary Tree Level Order Traversal
+
+Skip. DFS. [level0, level1, ...].flat().
+
+Use an array [l0A, l1A, l1B, ...]. Operate pointers carefully (pLastLevelHead, pLastLevelEnd, pLastLevelIterater).
+
+### Binary Tree Zigzag Level Order Traversal
+
+Skip. DFS as same as 'Binary Tree Level Order Traversal'
+
+Use stack and queue in turns. Queue for odd level, stack for even level.
+
+### Populating Next Right Pointers in Each Node
+
+Skip. DFS. [level0's most right, level1's, ...]
+
+### Populating Next Right Pointers in Each Node II
+
+O(1) space.
+
+Skip. Iterate every level. pLastLevel, pCurrentLevel, pCurrentLevelHead. Populating current level use last level as reference.
+
+### Lowest Common Ancestor of a Binary Search Tree
+
+```ts
+function lowestCommonAncestor(root: TreeNode | null, p: TreeNode | null, q: TreeNode | null): TreeNode | null {
+	if (root === null) return null;
+    if (root.val === p.val || root.val === q.val) return root;
+    if (p.val > q.val) return lowestCommonAncestor(root, q, p);
+    if (p.val < root.val && root.val < q.val) return root;
+    if (q.val < root.val) return lowestCommonAncestor(root.left, p, q);
+    else return lowestCommonAncestor(root.right, p, q);
+};
+```
+
+### Lowest Common Ancestor of a Binary Tree
+
+```ts
+function lowestCommonAncestor(root: TreeNode | null, p: TreeNode | null, q: TreeNode | null): TreeNode | null {
+    if (root === null || p === null || q === null) return null;
+    
+    const findPath = (node: TreeNode, root: TreeNode | null): TreeNode[] | null => {
+        if (root === null) return null;
+        if (root === node) return [root];
+        const sub = findPath(node, root.left) || findPath(node, root.right);
+        return sub !== null ? [root, ...sub] : null;
+    }
+
+    const pQ = findPath(p, root);
+    const qQ = findPath(q, root);
+
+    let i = 0;
+    for (; i < Math.min(pQ.length, qQ.length) && pQ[i] === qQ[i]; i++) {}
+
+    return pQ[i-1];
+};
+```
+
+### Construct Binary Tree from Preorder and Inorder Traversal
+
+```ts
+function buildTree(preorder: number[], inorder: number[]): TreeNode | null {
+    // preorder [root, ...leftSub, ...rightSub]
+    // inorder [...leftSub, root, ...rightSub]
+    const inorderMap = new Map<number, number>(); // value -> index in inorder
+    for (let i = 0; i < inorder.length; i++) {
+        inorderMap.set(inorder[i], i);
+    }
+    const _buildTree = (lIndex: number, rIndex: number): TreeNode | null => {
+        if (lIndex > rIndex) return null;
+        const root = new TreeNode(preorder[lIndex]);
+        if (lIndex === rIndex) return root;
+        let i = lIndex + 1;
+        for (; i <= rIndex && inorderMap.get(preorder[i]) < inorderMap.get(preorder[lIndex]); i++) {}
+        root.left = _buildTree(lIndex + 1, i - 1);
+        root.right = _buildTree(i, rIndex);
+        return root;
+    }
+
+    return _buildTree(0, preorder.length - 1);
+};
+```
+
+### Number of Islands
+
+```ts
+function numIslands(grid: string[][]): number {
+    // DFS
+    const m = grid.length;
+    const n = grid[0].length;
+
+    let currentIslandId = 2;
+
+    const DFS = (i: number, j: number) => {
+        if (grid[j][i] !== '1') {
+            return false; // water or visited
+        }
+        grid[j][i] = currentIslandId.toString(); // visited
+        // left
+        if (i > 0) DFS(i - 1, j);
+        // right
+        if (i < n - 1) DFS(i + 1, j);
+        // top
+        if (j > 0) DFS(i, j - 1);
+        // bottom
+        if (j < m - 1) DFS(i, j + 1);
+        return true;
+    }
+
+    for (let j = 0; j < m; j++) {
+        for (let i = 0; i < n; i++) {
+            const flag = DFS(i, j);
+            if (flag) currentIslandId++;
+        }
+    }
+    return (currentIslandId - 2);
+};
+```
+
+### Clone Graph
+
+```ts
+function cloneGraph(node: Node | null): Node | null {
+    if (node === null) return null;
+	const map = new Map<number, Node>(); // val -> Node
+
+    const DFS = (node: Node): Node => { // original -> clone
+        if (map.has(node.val)) {
+            return map.get(node.val);
+        }
+
+        const clone = new Node(node.val);
+        map.set(node.val, clone);
+
+        for (let neighbor of node.neighbors) {
+            clone.neighbors.push(DFS(neighbor));
+        }
+        return clone;
+    }
+    return DFS(node);
+};
+```
+
+## Backtracking
+
+### Letter Combinations of a Phone Number
+
+```ts
+function digit2Characters(digit: string): string {
+    switch (digit) {
+        case '2': return 'abc';
+        case '3': return 'def';
+        case '4': return 'ghi';
+        case '5': return 'jkl';
+        case '6': return 'mno';
+        case '7': return 'pqrs';
+        case '8': return 'tuv';
+        case '9': return 'wxyz';
+    }
+}
+
+function letterCombinations(digits: string): string[] {
+    if (digits.length === 0) return [];
+    const backtrack = (done: string[], todo: string[]): string[] => {
+        if (todo.length === 0) return done;
+        const [digit, ...rest] = todo;
+        const newDone: string[] = [];
+        for (let char of digit2Characters(digit)) {
+            for (let doneStr of done) {
+                newDone.push(doneStr + char);
+            }
+        }
+        return backtrack(newDone, rest);
+    }
+    return backtrack([''], [...digits]);
+};
+```
+
+### Word Search II
+
+```ts
+
+```
