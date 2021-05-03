@@ -839,3 +839,206 @@ function isMatch(s: string, p: string): boolean {
     return backtrack(0, 0);
 };
 ```
+
+```ts
+// final
+function isMatch(s: string, p: string): boolean {
+    let sIndex = 0;
+    let pIndex = 0;
+    let sTempIndex = -1;
+    let pStarIndex = -1;
+
+    while (sIndex < s.length) {
+        if (pIndex < p.length && (s[sIndex] === p[pIndex] || p[pIndex] === '?')) {
+            sIndex++;
+            pIndex++;
+        } else if (pIndex < p.length && p[pIndex] === '*') {
+            pStarIndex = pIndex;
+            sTempIndex = sIndex;
+            pIndex++;
+        } else {
+            if (sTempIndex === -1) return false;
+            pIndex = pStarIndex + 1;
+            sIndex = sTempIndex + 1;
+            sTempIndex++;
+        }
+    }
+
+    while (pIndex < p.length) {
+        if (p[pIndex] !== '*') return false;
+        pIndex++;
+    }
+    return true;
+};
+```
+
+### Regular Expression Matching
+
+```ts
+// DP
+function isMatch(s: string, p: string): boolean {
+    const splitP = new Array<string>(); // 'ac*..*' -> a,c*,.,.*
+    for (let i = 0; i < p.length; i++) {
+        if (p[i + 1] === '*') {
+            splitP.push(p[i] + p[i+1]);
+            i++;
+        } else {
+            splitP.push(p[i]);
+        }
+    }
+
+    const n = s.length + 1;
+    const m = splitP.length + 1;
+
+    const mat: boolean[][] = new Array(m);
+    mat[0] = [true, ...new Array(n - 1).fill(false)];
+
+    for (let j = 1; j < m; j++) {
+        mat[j] = new Array(n);
+        mat[j][0] = mat[j - 1][0] ? splitP[j - 1].length === 2 : false;
+        for (let i = 1; i < n; i++) {
+            if (splitP[j - 1] === '.'){
+                mat[j][i] = mat[j - 1][i - 1];
+            } else if (splitP[j - 1].length === 1) {
+                mat[j][i] = splitP[j-1] === s[i - 1] ? mat[j-1][i-1] : false;
+            } else if (splitP[j - 1] === '.*') {
+                mat[j][i] = mat[j][i-1] || mat[j-1][i];
+            } else {
+                mat[j][i] = splitP[j-1][0] === s[i-1] ? mat[j][i-1] || mat[j-1][i] : mat[j-1][i];
+            }
+        }
+    }
+
+    return mat[m-1][n-1];
+};
+```
+
+## Sorting and Searching
+
+### Remove Duplicates from Sorted Array
+
+```ts
+function removeDuplicates(nums: number[]): number {
+    let cur = 0;
+    for (let next = 0; next < nums.length; next++) {
+        if (nums[cur] === nums[next]) {
+            continue;
+        } else {
+            cur++;
+            nums[cur] = nums[next];
+        }
+    }
+    return cur + 1;
+};
+```
+
+### Merge Sorted Array
+
+Skip. Ascending from left to right means descending from right to left.
+
+### Sort Colors
+
+```ts
+function sortColors(nums: number[]): void {
+    let left = 0;
+    let right = nums.length - 1;
+    let cur = 0;
+    while (cur <= right) {
+        if (nums[left] === 0) {
+            left++;
+            cur++;
+        } else if (nums[right] === 2) {
+            right--;
+        } else if (nums[cur] === 1) {
+            cur++;
+        } else if (nums[cur] === 0) {
+            nums[cur] = nums[left];
+            nums[left] = 0;
+        } else if (nums[cur] === 2) {
+            nums[cur] = nums[right];
+            nums[right] = 2;
+        }
+    }
+};
+```
+
+### Find Minimum in Rotated Sorted Array
+
+```ts
+function findMin(nums: number[]): number {
+    const n = nums.length;
+    if (nums[0] < nums[n-1]) return nums[0];
+
+    const BinarySearch = (left: number, right: number): number => {
+        if (left === right) return left;
+        const mid = Math.floor((left + right) / 2);
+        if (nums[mid] >= nums[0]) {
+            // find right
+            return BinarySearch(mid + 1, right);
+        } else if (nums[mid] < nums[mid - 1]) {
+            return mid;
+        } else {
+            return BinarySearch(left, mid - 1);
+        }
+    }
+    return nums[BinarySearch(0, n - 1)];
+};
+```
+
+### Search in Rotated Sorted Array
+
+```ts
+function search(nums: number[], target: number): number {
+    let left = 0;
+    let right = nums.length - 1;
+    while (left <= right) {
+        let mid = Math.floor((left + right) / 2);
+        if (nums[mid] === target) return mid;
+        if (nums[mid] >= nums[0]) {
+            if (nums[left] <= target && target < nums[mid]) {
+                right = mid - 1;
+            } else {
+                left = mid + 1;
+            }
+        } else {
+            if (nums[mid] < target && target < nums[0]) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+    }
+    return -1;
+};
+```
+
+### Search a 2D Matrix
+
+```ts
+function searchMatrix(matrix: number[][], target: number): boolean {
+    const m = matrix.length;
+    const n = matrix[0].length;
+
+    const getVal = (num: number): number => {
+        const j = Math.floor(num / n);
+        const i = num % n;
+        return matrix[j][i];
+    }
+
+    const BS = (l: number, r: number): boolean => {
+        if (l > r) return false;
+        const mid = Math.floor((l+r)/2);
+        if (getVal(mid) === target) return true;
+        if (getVal(mid) < target) {
+            return BS(mid+1, r);
+        } else {
+            return BS(l, mid -1);
+        }
+    }
+    return BS(0, m*n-1);
+};
+```
+
+### Search a 2D Matrix II
+
+Skip. From right top corner and to left and to bottom, do zig-zag.
