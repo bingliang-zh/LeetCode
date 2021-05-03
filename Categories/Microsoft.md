@@ -612,5 +612,230 @@ function letterCombinations(digits: string): string[] {
 ### Word Search II
 
 ```ts
+class Trie {
+    arr: Array<Trie | undefined> = new Array(26); // 'a' -> Trie
+    word: string | undefined = undefined;
 
+    insert(str: string, word?: string): void {
+        if (str.length === 0) {
+            this.word = word;
+        } else {
+            const first = str[0];
+            const rest = str.substr(1);
+            const index = first.charCodeAt(0) - 'a'.charCodeAt(0);
+            if (!this.arr[index]) {
+                this.arr[index] = new Trie;
+            }
+            this.arr[index].insert(rest, word ? word : str);
+        }
+    }
+
+    getSubTrie(char: string): Trie | undefined {
+        const index = char.charCodeAt(0) - 'a'.charCodeAt(0);
+        return this.arr[index];
+    }
+}
+
+function findWords(board: string[][], words: string[]): string[] {
+    const root = new Trie;
+    for (let word of words) {
+        root.insert(word);
+    }
+
+    const n = board[0].length;
+    const m = board.length;
+
+    const findMatchedWords = (i: number, j: number, trie: Trie): string[] => {
+        const currentChar = board[j][i];
+        if (currentChar === ' ') return []; // space as visited
+        const subTrie = trie.getSubTrie(currentChar);
+        if (!subTrie) return []; // no such word
+        const result = [];
+        if (subTrie.word) {
+            result.push(subTrie.word);
+        }
+        board[j][i] = ' ' // space as visited
+        if (i > 0) result.push(...findMatchedWords(i - 1, j, subTrie));
+        if (i < n - 1) result.push(...findMatchedWords(i + 1, j, subTrie));
+        if (j > 0) result.push(...findMatchedWords(i, j - 1, subTrie));
+        if (j < m - 1) result.push(...findMatchedWords(i, j + 1, subTrie));
+        board[j][i] = currentChar;
+        return result;
+    }
+
+    const set = new Set<string>();
+    // DFS
+    for (let j = 0; j < m; j++){
+        for (let i = 0; i < n; i++) {
+            for (let word of findMatchedWords(i, j, root)) {
+                set.add(word);
+            }
+        }
+    }
+    return Array.from(set);
+};
+```
+
+### Wildcard Matching
+
+```ts
+// first try
+function isMatch(s: string, p: string): boolean {
+    const memo = new Map<string, boolean>();
+
+    const removeDuplicatedStars = (p: string): string => {
+        if (p.length < 2) return p;
+        let result = p[0];
+        for (let i = 1; i < p.length; i++) {
+            if (p[i] === '*' && p[i - 1] === '*') continue;
+            result += p[i];
+        }
+        return result;
+    }
+
+    const backtrack = (s: string, p: string): boolean => {
+        if (p === '' && s === '') return true;
+        if (p === '*') return true;
+        if (p === '') return false;
+        if (s === '' && p[0] !== '*') return false;
+        if (p === '?' && s.length === 1) return true;
+        if (p === s) return true;
+        const key = s + ',' + p;
+        if (memo.has(key)) return memo.get(key);
+
+        const firstP = p[0];
+        const restP = p.substring(1);
+        switch (firstP) {
+            case '?': {
+                const result = backtrack(s.substring(1), restP);
+                memo.set(key, result);
+                return result;
+            }
+            case '*':
+                const possibleS = [];
+                for (let i = 0; i <= s.length; i++) {
+                    possibleS.push(s.substring(i));
+                }
+                for (let i = 0; i < possibleS.length; i++) {
+                    if (backtrack(possibleS[i], restP)) {
+                        memo.set(key, true);
+                        return true;
+                    }
+                }
+                memo.set(key, false);
+                return false;
+            default:
+                const result = s[0] === firstP ? backtrack(s.substring(1), restP) : false;
+                memo.set(key, result);
+                return result;
+        }
+    }
+
+    return backtrack(s, removeDuplicatedStars(p));
+};
+```
+
+```ts
+// DP
+//  ^abcbd
+// ^100000
+// *111111
+// b001010
+// ?000101
+// d000000
+function isMatch(s: string, p: string): boolean {
+    const removeDuplicatedStars = (p: string): string => {
+        if (p.length < 2) return p;
+        let result = p[0];
+        for (let i = 1; i < p.length; i++) {
+            if (p[i] === '*' && p[i - 1] === '*') continue;
+            result += p[i];
+        }
+        return result;
+    }
+
+    p = removeDuplicatedStars(p);
+
+    const m = p.length + 1;
+    const n = s.length + 1;
+
+    const table: boolean[][] = new Array(m);
+    table[0] = new Array<boolean>(n).fill(false);
+    table[0][0] = true;
+    for (let j = 1; j < m; j++) {
+        table[j] = new Array<boolean>(n).fill(false);
+        for (let i = 0; i < n; i++) {
+            switch (p[j - 1]) {
+                case '*':
+                    table[j][i] = table[j - 1][i] === true ? true : i === 0 ? false : table[j][i - 1];
+                    break;
+                case '?':
+                    table[j][i] = i === 0 ? false : table[j - 1][i - 1];
+                    break;
+                default:
+                    table[j][i] = i === 0 ? false : table[j - 1][i - 1] && s[i - 1] === p[j - 1];
+                    break;
+            }
+        }
+    }
+    return table[m - 1][n - 1];
+};
+```
+
+```ts
+// second try
+function isMatch(s: string, p: string): boolean {
+    const cache = new Map<string, boolean>(); // sIndex,pIndex => bool
+    const removeDuplicatedStars = (p: string): string => {
+        if (p.length < 2) return p;
+        let result = p[0];
+        for (let i = 1; i < p.length; i++) {
+            if (p[i] === '*' && p[i - 1] === '*') continue;
+            result += p[i];
+        }
+        return result;
+    }
+
+    p = removeDuplicatedStars(p);
+    const backtrack = (sIndex: number, pIndex: number): boolean => {
+        const key = `${sIndex},${pIndex}`;
+        if (cache.has(key)) return cache.get(key);
+        if (sIndex === s.length) {
+            for (let i = pIndex; i < p.length; i++) {
+                if (p[i] !== '*') {
+                    cache.set(key, false)
+                    return false;
+                }
+            }
+            cache.set(key, true)
+            return true;
+        }
+
+        const sChar = s[sIndex];
+        const pChar = p[pIndex];
+        switch (pChar) {
+            case '*':
+                for (let i = sIndex; i <= s.length; i++) {
+                    if (backtrack(i, pIndex + 1)) {
+                        cache.set(key, true)
+                        return true;
+                    }
+                }
+
+                cache.set(key, false)
+                return false;
+            case '?':
+                const result = backtrack(sIndex + 1, pIndex + 1);
+                cache.set(key, result);
+                return result;
+            default:
+                {
+                    const result = sChar === pChar ? backtrack(sIndex + 1, pIndex + 1) : false;
+                    cache.set(key, result);
+                    return result;
+                }
+        }
+    }
+    return backtrack(0, 0);
+};
 ```
