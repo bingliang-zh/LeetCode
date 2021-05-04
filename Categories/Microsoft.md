@@ -1042,3 +1042,436 @@ function searchMatrix(matrix: number[][], target: number): boolean {
 ### Search a 2D Matrix II
 
 Skip. From right top corner and to left and to bottom, do zig-zag.
+
+### Median of Two Sorted Arrays
+
+```ts
+function findMedianSortedArrays(nums1: number[], nums2: number[]): number {
+    const m = nums1.length;
+    const n = nums2.length;
+    if (m < n) return findMedianSortedArrays(nums2, nums1);
+    if (n === 0) {
+        return m % 2 === 0 ? (nums1[m / 2 - 1] + nums1[m / 2] ) / 2 : nums1[Math.floor(m / 2)];
+    }
+
+    const isEven = (m + n) % 2 === 0;
+
+    let left = 0;
+    let right = n;
+
+    while (left <= right) {
+        const i = Math.floor((left + right) / 2);
+        const j = Math.floor((m + n + 1) / 2) - i;
+
+        const a = j === 0 ? -Number.MAX_VALUE : nums1[j - 1];
+        const b = i === 0 ? undefined : nums2[i - 1];
+        const c = j === m ? Number.MAX_VALUE : nums1[j];
+        const d = i === n ? undefined : nums2[i];
+
+        if (i === 0) {
+            if (a <= d) return isEven ? (a + Math.min(c, d)) / 2 : a;
+            left = i + 1;
+        } else if (i === n) {
+            if (b <= c) return isEven ? (Math.max(a, b) + c) / 2 : Math.max(a, b);
+            right = i - 1;
+        } else {
+            if (a <= d && b <= c) {
+                return isEven ? (Math.max(a, b) + Math.min(c, d)) / 2 : Math.max(a, b);
+            } else if (d < a) {
+                left = i + 1;
+            } else if (b > c) {
+                right = i - 1;
+            }
+        }
+    }
+};
+```
+
+## Dynamic Programming
+
+### Best Time to Buy and Sell Stock
+
+```ts
+function maxProfit(prices: number[]): number {
+    let maxProfit = 0;
+    let minPrice = Number.MAX_VALUE;
+
+    for (let i = 0; i < prices.length; i++) {
+        if (prices[i] < minPrice) {
+            minPrice = prices[i];
+        } else {
+            maxProfit = Math.max(maxProfit, prices[i] - minPrice);
+        }
+    }
+    return maxProfit;
+};
+```
+
+### Maximum Subarray
+
+```ts
+function maxSubArray(nums: number[]): number {
+    let largestSum = -Number.MAX_VALUE;
+    let currentSum = 0;
+    for (let i = 0; i < nums.length; i++) {
+        currentSum += nums[i];
+        largestSum = Math.max(largestSum, currentSum);
+        currentSum = Math.max(0, currentSum);
+    }
+    return largestSum;
+};
+```
+
+### Longest Increasing Subsequence
+
+```ts
+// DP tabulation
+function lengthOfLIS(nums: number[]): number {
+    // 10,9,2,5,3,7,101,18
+    // 1, 1,1,2,2,3,4,  4
+    let result = 1;
+    const n = nums.length;
+    const cache = new Array<number>(n);
+    for (let i = 0; i < nums.length; i++) {
+        let maxSubLIS = 0;
+        for (let j = 0; j < i; j++) {
+            if (nums[i] > nums[j]) {
+                maxSubLIS = Math.max(maxSubLIS, cache[j]);
+            }
+        }
+        cache[i] = maxSubLIS + 1;
+        result = Math.max(cache[i], result);
+    }
+    return result;
+}
+```
+
+```ts
+// DP 1
+function lengthOfLIS(nums: number[]): number {
+    // 10,9,2,5,3,7,101,18
+    // 10
+    // 9
+    // 2
+    // 2, 5
+    // 2, 3
+    // 2, 3, 7
+    // 2, 3, 7, 101
+    // 2, 3, 18, 101
+    const cache: number[] = [];
+    for (let i = 0; i < nums.length; i++) {
+        let flag = false;
+        for (let j = 0; j < cache.length; j++) {
+            if (nums[i] <= cache[j]) {
+                cache[j] = nums[i];
+                flag = true;
+                break;
+            }
+        }
+        if (flag === false) {
+            cache.push(nums[i]);
+        }
+    }
+    return cache.length;
+}
+```
+
+## Design
+
+### Serialize and Deserialize BST
+
+Skip. Pre-order traversal, omit ',' between numbers using bytes. If next byte's start with 0, then means read one byte, if start with 10, read two bytes. 10111111 | 11111111 -> 111111 | 11111111 -> 16383 > 10^4. Two bytes is enough for all possible integers.
+
+### Serialize and Deserialize Binary Tree
+
+```ts
+function serialize(root: TreeNode | null): string {
+    if (root === null) return '';
+    const arr: Array<[number, number, number]> = [];
+    const _serialize = (node: TreeNode | null): number => { // return index
+        if (node === null) return -1;
+        const index = arr.length;
+        arr.push([node.val, -1, -1]);
+        arr[index][1] = _serialize(node.left);
+        arr[index][2] = _serialize(node.right);
+        return index;
+    }
+    _serialize(root);
+    return arr.toString();
+};
+
+function deserialize(data: string): TreeNode | null {
+    if (data === '') return null;
+    const arr = data.split(',').map(str => Number(str));
+    
+    const _deserialize = (index: number): TreeNode | null => {
+        if (index === -1) return null;
+        const val = arr[3 * index];
+        const leftIndex = arr[3 * index + 1];
+        const rightIndex = arr[3 * index + 2];
+        return new TreeNode(val, _deserialize(leftIndex), _deserialize(rightIndex));
+    }
+    return _deserialize(0);
+};
+```
+
+### Implement Trie (Prefix Tree)
+
+```ts
+class Trie {
+    arr: Array<Trie | undefined>;
+    word: string | undefined;
+
+    constructor() {
+        this.arr = new Array<Trie | undefined>(26);
+        this.word = undefined;
+    }
+
+    insert(word: string, fullWord?: string): void {
+        if (!fullWord) fullWord = word;
+        if (word === '') {
+            this.word = fullWord;
+            return;
+        }
+        const subTrieIndex = word.charCodeAt(0) - 'a'.charCodeAt(0);
+        if (this.arr[subTrieIndex] === undefined) {
+            this.arr[subTrieIndex] = new Trie;
+        }
+        this.arr[subTrieIndex].insert(word.substr(1), fullWord);
+    }
+
+    search(word: string): boolean {
+        if (word === '') return this.word !== undefined;
+        const subTrie = this.arr[word.charCodeAt(0) - 'a'.charCodeAt(0)];
+        if (!subTrie) return false;
+        return subTrie.search(word.substr(1));
+    }
+
+    startsWith(prefix: string): boolean {
+        if (prefix === '') return true;
+        const subTrie = this.arr[prefix.charCodeAt(0) - 'a'.charCodeAt(0)];
+        if (!subTrie) return false;
+        return subTrie.startsWith(prefix.substr(1));
+    }
+}
+```
+
+### LRU Cache
+
+```ts
+class ListNode2 {
+    key: number;
+    val: number;
+    next: ListNode2;
+    last: ListNode2;
+    constructor(key?: number, val?: number, next?: ListNode2, last?: ListNode2) {
+        this.key = key;
+        this.val = val;
+        this.next = next;
+        this.last = last;
+    }
+}
+
+class LRUCache {
+    head: ListNode2;
+    tail: ListNode2;
+    map: Map<number, ListNode2>;
+    capacity: number;
+
+    constructor(capacity: number) {
+        this.head = new ListNode2;
+        this.tail = new ListNode2;
+        this.head.next = this.tail;
+        this.tail.last = this.head;
+        this.map = new Map;
+        this.capacity = capacity;
+    }
+
+    get(key: number): number {
+        if (!this.map.has(key)) return -1;
+        const node = this.map.get(key);
+        node.last.next = node.next;
+        node.next.last = node.last;
+        const FRU = this.head.next;
+        this.head.next = node;
+        node.last = this.head;
+        FRU.last = node;
+        node.next = FRU;
+        return node.val;
+    }
+
+    put(key: number, value: number): void {
+        if (this.map.has(key)) {
+            const node = this.map.get(key);
+            node.val = value;
+            node.last.next = node.next;
+            node.next.last = node.last;
+            node.last = this.head;
+            node.next = this.head.next;
+            node.last.next = node;
+            node.next.last = node;
+        } else {
+            if (this.map.size === this.capacity) {
+                const lastKey = this.tail.last.key;
+                this.tail.last.last.next = this.tail;
+                this.tail.last = this.tail.last.last;
+                console.log(lastKey);
+                this.map.delete(lastKey);
+            }
+            const newNode = new ListNode2(key, value, this.head.next, this.head);
+            this.head.next.last = newNode;
+            this.head.next = newNode;
+            this.map.set(key, newNode);
+        }
+    }
+
+    printSelf(): void {
+        console.log(this.map);
+        console.log(this.head);
+        console.log(this.tail);
+    }
+}
+```
+
+## Others
+
+### Single Number
+
+```ts
+function singleNumber(nums: number[]): number {
+    let result = 0;
+    for (let i = 0; i < nums.length; i++) {
+        result ^= nums[i];
+    }
+    return result;
+};
+```
+
+### Roman to Integer
+
+```ts
+function mapper(s: string): number {
+    switch(s) {
+        case 'I': return 1;
+        case 'V': return 5;
+        case 'X': return 10;
+        case 'L': return 50;
+        case 'C': return 100;
+        case 'D': return 500;
+        case 'M': return 1000;
+    }
+}
+function romanToInt(s: string): number {
+    let result = 0;
+    for (let i = 0; i < s.length; i++) {
+        result += mapper(s[i]);
+        if (i > 0) {
+            if ((s[i] === 'V' || s[i] === 'X') && s[i - 1] === 'I') result -= 2;
+            else if ((s[i] === 'L' || s[i] === 'C') && s[i - 1] === 'X') result -= 20;
+            else if ((s[i] === 'D' || s[i] === 'M') && s[i - 1] === 'C') result -= 200;
+        }
+    }
+    return result;
+};
+```
+
+### Excel Sheet Column Number
+
+Skip.
+
+### Find the Celebrity
+
+```ts
+var solution = function(knows: (a: number, b: number) => boolean) {
+    return function(n: number): number {
+        const possibleCelebrities = new Array<number>(n);
+        for (let i = 0; i < n; i++) {
+            possibleCelebrities[i] = i;
+        }
+
+        while (possibleCelebrities.length > 1) {
+            const a = possibleCelebrities.pop();
+            const b = possibleCelebrities.pop();
+            possibleCelebrities.push(knows(a, b) ? b : a);
+        }
+
+        const celebrity = possibleCelebrities[0];
+        for (let i = 0; i < n; i++) {
+            if (i !== celebrity) {
+                if (!knows(i, celebrity) || knows(celebrity, i)) {
+                    return -1;
+                }
+            }
+        }
+        return celebrity;
+    };
+};
+```
+
+### Integer to English Words
+
+Skip.
+
+### The Skyline Problem
+
+```ts
+function getSkyline(buildings: number[][]): number[][] {
+    const n = buildings.length;
+
+    const merge = (left: number, right: number): number[][] => {
+        if (left > right) return [];
+        if (left === right) {
+            const [a, b, c] = buildings[left];
+            return [[a, c], [b, 0]];
+        }
+        const mid = Math.floor((left + right) / 2);
+        const leftPart = merge(left, mid);
+        const rightPart = merge(mid + 1, right);
+        const result: number[][] = [];
+        let aLastHeight = 0;
+        let bLastHeight = 0;
+
+        for (let a = 0, b = 0; a < leftPart.length || b < rightPart.length;) {
+            const [aX, aHeight] = a < leftPart.length ? leftPart[a] : [Number.MAX_VALUE, 0];
+            const [bX, bHeight] = b < rightPart.length ? rightPart[b] : [Number.MAX_VALUE, 0];
+            if (aX === bX) {
+                result.push([aX, Math.max(aHeight, bHeight)]);
+                aLastHeight = aHeight;
+                bLastHeight = bHeight;
+                a++;
+                b++;
+            } else if (aX < bX) {
+                result.push([aX, Math.max(aHeight, bLastHeight)]);
+                aLastHeight = aHeight;
+                a++;
+            } else {
+                result.push([bX, Math.max(bHeight, aLastHeight)]);
+                bLastHeight = bHeight;
+                b++;
+            }
+        }
+
+        // remove duplicates
+        const result2: number[][] = [];
+        if (result.length > 1) {
+            result2.push(result[0]);
+        }
+        
+        for (let i = 1; i < result.length; i++) {
+            if (result[i - 1][1] !== result[i][1]) {
+                result2.push(result[i]);
+            }
+        }
+
+        if (result2.length > 0) {
+            if (result2[0][1] === 0) {
+                result2.shift();
+            }
+        }
+
+        return result2;
+    }
+
+    return merge(0, n - 1);
+};
+```
