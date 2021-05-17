@@ -17,6 +17,7 @@
   - [Construct Binary Tree from Preorder and Inorder Traversal](#construct-binary-tree-from-preorder-and-inorder-traversal)
   - [Populating Next Right Pointers in Each Node](#populating-next-right-pointers-in-each-node)
   - [Kth Smallest Element in a BST](#kth-smallest-element-in-a-bst)
+  - [Inorder Successor in BST](#inorder-successor-in-bst)
   - [Number of Islands](#number-of-islands)
 - [Backtracking](#backtracking)
   - [Letter Combinations of a Phone Number](#letter-combinations-of-a-phone-number)
@@ -458,77 +459,42 @@ Note that the linked lists must retain their original structure after the functi
 
 Solution: Assume A list's length is i, B list's length is j, reverse A list, assume A list's reverse's head is C, now B list's length is k. i = a + 1 + c, j = b + 1 + c, k = b + 1 + a. Then we can resolve a, b and c. Reverse C list, and return intersection when reversing using value c (c equals (i + j - k - 1) / 2). Now the lists remain original.
 
-Comments: Looks like the official best solution is more understandable with O(2a + 2b + 4c + 4). But mine is more interesting with O(3a + 2b + 3c + 4). Both have no additional data structures.
-
 ```typescript
-// typescript
-// a bit mess but it works ^_^
-function reverseList(head: ListNode | null, nth?: number): {head: ListNode | null, length: number, nthNode: ListNode | null} {
-    if (!head || !head.next) {
-        return {
-            head,
-            length: !head ? 0 : 1,
-            nthNode: !head ? null : nth === 1 ? head : head.next && nth === 2 ? head.next : null
-        };
-    }
-    let pA: ListNode | null = null;
-    let pB: ListNode | null = head;
-    let pC: ListNode | null = head.next;
-
-    let nthNode: ListNode | null = null;
-    let length = 1;
-    while (pC) {
-        if (length === nth) {
-            nthNode = pB;
-        }
-
-        pB.next = pA;
-        pA = pB;
-        pB = pC;
-        pC = pC.next;
-        length++;
-    }
-    if (length === nth) {
-        nthNode = pB;
-    }
-    pB.next = pA;
-
-    return {
-        head: pB,
-        length,
-        nthNode,
-    };
-};
-
 function getIntersectionNode(headA: ListNode | null, headB: ListNode | null): ListNode | null {
-    let j = 0;
-    let iterator = headB;
-    let headBEnd = headB;
-    // get headB's length
-    while (iterator) {
-        headBEnd = iterator;
-        iterator = iterator.next;
-        j++;
+    if (!headA || !headB) return null;
+    let itA = headA;
+    let lengthA = 1;
+    while (itA) {
+        itA = itA.next;
+        lengthA++;
     }
-    // reverse headA and get headA's length at the same time
-    iterator = headA;
-    const { length: i, head: headC } = reverseList(iterator);
-    if (headBEnd !== headC) {
-        reverseList(headC);
-        return null;
+    let itB = headB;
+    let lengthB = 1;
+    while (itB) {
+        itB = itB.next;
+        lengthB++;
     }
-    // get headB's length
-    let k = 0;
-    iterator = headB;
-    while (iterator) {
-        iterator = iterator.next;
-        k++;
+
+    itA = headA;
+    itB = headB;
+
+    while (lengthA > lengthB) {
+        itA = itA.next;
+        lengthA--;
     }
-    // intersection is the (c + 1)th node start from headC
-    const c = (i + j - k - 1) / 2;
-    // reverse headC
-    const { nthNode } = reverseList(headC, c + 1);
-    return nthNode;
+    while (lengthB > lengthA) {
+        itB = itB.next;
+        lengthB--;
+    }
+
+    while (itA) {
+        if (itA === itB) {
+            return itA;
+        }
+        itA = itA.next;
+        itB = itB.next;
+    }
+    return null;
 };
 ```
 
@@ -739,6 +705,43 @@ function kthSmallest(root: TreeNode | null, k: number): number {
 };
 ```
 
+### Inorder Successor in BST
+
+> Given the root of a binary search tree and a node p in it, return the in-order successor of that node in the BST. If the given node has no in-order successor in the tree, return null.  
+The successor of a node p is the node with the smallest key greater than p.val.
+
+```ts
+const findSmallest = (root: TreeNode): TreeNode => {
+    while (root.left) {
+        root = root.left;
+    }
+    return root;
+}
+
+
+function inorderSuccessor(root: TreeNode | null, p: TreeNode | null): TreeNode | null {
+    if (!root || !p) return null;
+
+	const stack: TreeNode[] = [];
+    while (root !== p) {
+        stack.push(root);
+        if (p.val < root.val) {
+            root = root.left;
+        } else {
+            root = root.right;
+        }
+    }
+    
+    if (p.right) return findSmallest(p.right);
+
+    while (true) {
+        const top = stack.pop();
+        if (!top) return null;
+        if (top.val > p.val) return top;
+    }
+};
+```
+
 ### Number of Islands
 
 > Given an m x n 2D binary grid grid which represents a map of '1's (land) and '0's (water), return the number of islands.  
@@ -927,22 +930,25 @@ function generateParenthesis(n: number): string[] {
 > Given an array nums of distinct integers, return all the possible permutations. You can return the answer in any order.
 
 ```typescript
-// typescript
 function permute(nums: number[]): number[][] {
-    const result: number[][] = [];
-
-    const backtrack = (cur: number[], available: number[]) => {
-        if (cur.length === nums.length) {
-            result.push(cur);
-            return;
-        }
-        for (let newNumber of available) {
-            backtrack(cur.concat([newNumber]), available.filter(p => p !== newNumber));
-        };
+    const swap = (a: number, b: number) => {
+        const temp = nums[a];
+        nums[a] = nums[b];
+        nums[b] = temp;
     }
-
-    backtrack([], nums);
-
+    const result: number[][] = [];
+    const backtrack = (start: number) => {
+        if (start === nums.length - 1) {
+            result.push(nums.concat());
+        } else {
+            for (let i = start; i < nums.length; i++) {
+                swap(i, start);
+                backtrack(start + 1);
+                swap(i, start);
+            }
+        }
+    }
+    backtrack(0);
     return result;
 };
 ```

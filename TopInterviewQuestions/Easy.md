@@ -69,7 +69,6 @@ Do not allocate extra space for another array, you must do this by modifying the
 Solution: Two indexes, one for next element (unidentified), one for identified independent elements' length.
 
 ```typescript
-// typescript
 function removeDuplicates(nums: number[]): number {
     let identifiedCount = 0;
 
@@ -86,11 +85,6 @@ function removeDuplicates(nums: number[]): number {
         }
     }
 
-    // Optional
-    // while (nums.length > identifiedCount) {
-    //     nums.pop();
-    // }
-
     return identifiedCount;
 };
 ```
@@ -102,57 +96,17 @@ Design an algorithm to find the maximum profit. You may complete as many transac
 Note: You may not engage in multiple transactions at the same time (i.e., you must sell the stock before you buy again).
 
 ```typescript
-// typescript
 function maxProfit(prices: number[]): number {
-    if (prices.length === 1) return 0;
-
-    const extremes: number[] = [prices[0]];
-
-    let lastPrice = prices[0];
-    let currentPrice = prices[0];
-
-    for (let next = 1; next < prices.length; next ++) {
-        const nextPrice = prices[next];
-        const deltaLast = currentPrice - lastPrice;
-        const deltaNext = currentPrice - nextPrice;
-
-        if (deltaNext === 0) {
-            continue;
-        }
-
-        if (deltaLast === 0) {
-            currentPrice = nextPrice;
-            continue;
-        }
-
-        if (deltaLast * deltaNext < 0) {
-            // keep trending
-            currentPrice = nextPrice;
-            continue;
-        } else {
-            // find an extreme
-            extremes.push(currentPrice);
-            lastPrice = currentPrice;
-            currentPrice = nextPrice;
-        }
-    }
-    // deal with the end of prices
-    const end = prices[prices.length - 1];
-    if (extremes.length < 2
-        || (extremes[extremes.length - 1] - extremes[extremes.length - 2]) * (extremes[extremes.length - 1] - end) > 0) {
-        extremes.push(end);
-    }
-
-    // all extremes are found, calculate profit
-    if (extremes[0] > extremes[1]) {
-        extremes.shift();
-    }
-    if (extremes.length % 2 !== 0) {
-        extremes.pop();
-    }
     let profit = 0;
-    for (let i = 0; i < extremes.length; i += 2) {
-        profit += extremes[i + 1] - extremes[i];
+    let currentInvestment = prices[0];
+
+    for (let i = 0; i < prices.length; i++) {
+        if (prices[i] > currentInvestment) {
+            profit += prices[i] - currentInvestment;
+            currentInvestment = prices[i];
+        } else {
+            currentInvestment = prices[i];
+        }
     }
     return profit;
 };
@@ -168,29 +122,21 @@ Could you do it in-place with O(1) extra space?
 Solution with hint: reverse
 
 ```typescript
-// typescript
-function rotate(nums: number[], _k: number): void {
-    const k = _k % nums.length;
+function rotate(nums: number[], k: number): void {
+    const reversePartition = (l: number, r: number): void => {
+        while (l < r) {
+            const temp = nums[l];
+            nums[l] = nums[r];
+            nums[r] = temp;
+            l++;
+            r--;
+        }
+    }
+
     nums.reverse();
-    let index0 = 0;
-    let index1 = k - 1;
-    let temp = 0;
-    while (index0 < index1) {
-        temp = nums[index0];
-        nums[index0] = nums[index1];
-        nums[index1] = temp;
-        index0 ++;
-        index1 --;
-    }
-    index0 = k;
-    index1 = nums.length - 1;
-    while (index0 < index1) {
-        temp = nums[index0];
-        nums[index0] = nums[index1];
-        nums[index1] = temp;
-        index0 ++;
-        index1 --;
-    }
+    const _k = k % nums.length;
+    reversePartition(0, _k - 1);
+    reversePartition(_k, nums.length - 1);
 };
 ```
 
@@ -200,41 +146,8 @@ function rotate(nums: number[], _k: number): void {
 Your function should return true if any value appears at least twice in  the array, and it should return false if every element is distinct.  
 
 ```typescript
-// typescript
-// in place search
 function containsDuplicate(nums: number[]): boolean {
-    for (let i = 0; i < nums.length; i++) {
-        for (let j = 0; j < i; j++) {
-            if (nums[i] == nums[j]) {
-                return true;
-            }
-        }
-    }
-    return false;
-};
-
-// use Sort
-function containsDuplicate(nums: number[]): boolean {
-    nums.sort();
-    for (let i = 0; i < nums.length - 1; i++) {
-        if (nums[i] === nums[i + 1]) {
-            return true;
-        }
-    }
-    return false;
-};
-
-// use Set
-function containsDuplicate(nums: number[]): boolean {
-    const numsSet = new Set<number>();
-    for (let i = 0; i < nums.length; i++) {
-        const cur = nums[i];
-        if (numsSet.has(cur)) {
-            return true;
-        }
-        numsSet.add(cur);
-    }
-    return false;
+    return new Set(nums).size !== nums.length;
 };
 ```
 
@@ -244,26 +157,6 @@ function containsDuplicate(nums: number[]): boolean {
 Follow up: Could you implement a solution with a linear runtime  complexity and without using extra memory?  
 
 ```typescript
-// typescript
-
-// use Set
-function singleNumber(nums: number[]): number {
-    const numsSet = new Set<number>();
-
-    for (let i = 0; i < nums.length; i++) {
-        const current = nums[i];
-        if (numsSet.has(current)) {
-            numsSet.delete(current);
-        } else {
-            numsSet.add(current);
-        }
-    }
-
-    const arr = Array.from(numsSet);
-    return arr[0];
-};
-
-// use XOR
 function singleNumber(nums: number[]): number {
     let result = 0;
     for (let i = 0; i < nums.length; i++) {
@@ -287,39 +180,31 @@ What if elements of nums2 are stored on disk, and the memory is limited such tha
 Solution: Solution to the common case is given below. If the given array is sorted, then simply convert it to a Map with <value, count>, merge two maps but the count uses the lesser one's but > 0, and convert the result to an array.
 
 ```typescript
-// typescript
-function intersect(_nums1: number[], _nums2: number[]): number[] {
-    const result = Array<number>();
+function intersect(nums1: number[], nums2: number[]): number[] {
+    const _nums1 = nums1.length < nums2.length ? nums1 : nums2;
+    const _nums2 = nums1.length < nums2.length ? nums2 : nums1;
 
-    const flag = _nums1.length < _nums2.length;
-
-    const nums1 = flag ? _nums1 : _nums2;
-    const nums2 = flag ? _nums2 : _nums1;
-
-    while (nums1.length > 0 && nums2.length > 0) {
-        const index2 = nums2.indexOf(nums1[0]);
-        
-        if (index2 > -1) {
-            // found
-            result.push(nums1[0]);
-            if (nums1.length > 1) {
-                nums1[0] = nums1.pop();
-            } else {
-                nums1.pop();
-            }
-            if (index2 !== nums2.length - 1) {
-                nums2[index2] = nums2.pop();
-            } else {
-                nums2.pop();
-            }
+    const map = new Map<number, number>();
+    for (let i = 0; i < _nums1.length; i++) {
+        if (map.has(_nums1[i])) {
+            map.set(_nums1[i], map.get(_nums1[i]) + 1);
         } else {
-            if (nums1.length > 1) {
-                nums1[0] = nums1.pop();
+            map.set(_nums1[i], 1);
+        }
+    }
+    
+    const result = [];
+    for (let i = 0; i < _nums2.length; i++) {
+        if (map.has(_nums2[i])) {
+            result.push(_nums2[i]);
+            if (map.get(_nums2[i]) === 1) {
+                map.delete(_nums2[i])
             } else {
-                nums1.pop();
+                map.set(_nums2[i], map.get(_nums2[i]) - 1);
             }
         }
     }
+
     return result;
 };
 ```
@@ -397,17 +282,18 @@ You can return the answer in any order.
 Hint: search, not add and compare.
 
 ```typescript
-// typescript
-function twoSum(nums: number[], sum: number): number[] {
+function twoSum(nums: number[], target: number): number[] {
+    const map = new Map<number, number>(); // value -> index
     for (let i = 0; i < nums.length; i++) {
-        const target = sum - nums[i];
-        const targetIndex = nums.indexOf(target, i + 1);
-        if (targetIndex > -1) {
-            return [i, targetIndex];
+        const diff = target - nums[i];
+        if (map.has(diff)) {
+            return [map.get(diff), i];
+        } else {
+            map.set(nums[i], i);
         }
     }
+    return [];
 };
-
 ```
 
 ### Valid Sudoku
@@ -925,7 +811,14 @@ function fromArray(nums: number[]): ListNode | null {
 > Write a function to delete a node in a singly-linked list. You will not be given access to the head of the list, instead you will be given access to the node to be deleted directly.  
 It is guaranteed that the node to be deleted is not a tail node in the list.  
 
-Comments: stupid question with official solution by copying value inside the node but not deleting the node itself.
+```ts
+function deleteNode(root: ListNode | null): void {
+    const next = root.next;
+    const nextNext = next.next;
+    root.val = next.val;
+    root.next = nextNext;
+};
+```
 
 ### Remove Nth Node From End of List
 
@@ -938,23 +831,19 @@ Comments: two passes is easy. The official one pass solution with two pointer is
 
 > Given the head of a singly linked list, reverse the list, and return the reversed list. 
 
-Comments: finally a good question.
-
 ```typescript
-// typescript
 function reverseList(head: ListNode | null): ListNode | null {
-    if (!head || !head.next) {
+    if (!head) {
         return head;
     }
     let pA: ListNode | null = null;
     let pB: ListNode | null = head;
-    let pC: ListNode | null = head.next;
 
-    while (pC) {
+    while (pB.next) {
+        const pC = pB.next;
         pB.next = pA;
         pA = pB;
         pB = pC;
-        pC = pC.next;
     }
     pB.next = pA;
 
