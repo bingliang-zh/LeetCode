@@ -17,6 +17,8 @@
   - [877. Stone Game](#877-stone-game)
   - [1140. Stone Game II](#1140-stone-game-ii)
   - [322. Coin Change](#322-coin-change)
+- [Hard](#hard)
+  - [1335. Minimum Difficulty of a Job Schedule](#1335-minimum-difficulty-of-a-job-schedule)
 
 All code written in typescript.
 
@@ -745,5 +747,50 @@ function coinChange(coins: number[], amount: number): number {
     }
 
     return DP(amount);
+};
+```
+
+## Hard
+
+### 1335. Minimum Difficulty of a Job Schedule
+
+You want to schedule a list of jobs in d days. Jobs are dependent (i.e To work on the i-th job, you have to finish all the jobs j where 0 <= j < i).
+
+You have to finish at least one task every day. The difficulty of a job schedule is the sum of difficulties of each day of the d days. The difficulty of a day is the maximum difficulty of a job done in that day.
+
+Given an array of integers jobDifficulty and an integer d. The difficulty of the i-th job is jobDifficulty[i].
+
+Return the minimum difficulty of a job schedule. If you cannot find a schedule for the jobs return -1.
+
+```ts
+function minDifficulty(jobDifficulty: number[], d: number): number {
+    const cache: Map<string, number> = new Map;
+    const _minDif = (currentIndex: number, days: number): number => {
+        const todos = jobDifficulty.length - currentIndex;
+        if (todos < days) return -1;
+        const key = currentIndex + ',' + days;
+        if (cache.has(key)) return cache.get(key);
+
+        let maxDiff = 0;
+        let minDiff = Number.MAX_VALUE;
+
+        if (days === 1) {
+            for (let i = currentIndex; i < jobDifficulty.length; i++) {
+                maxDiff = Math.max(maxDiff, jobDifficulty[i]);
+            }
+            minDiff = maxDiff;
+        } else {
+            for (let todays = 1; (todos - todays) >= (days - 1); todays++) {
+                maxDiff = Math.max(maxDiff, jobDifficulty[currentIndex + todays - 1]);
+                minDiff = Math.min(minDiff, maxDiff + _minDif(currentIndex + todays, days - 1));
+            }
+        }
+
+        cache.set(key, minDiff);
+        return minDiff;
+    }
+
+    const result = _minDif(0, d);
+    return result;
 };
 ```
