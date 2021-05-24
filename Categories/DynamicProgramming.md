@@ -19,6 +19,7 @@
   - [322. Coin Change](#322-coin-change)
 - [Hard](#hard)
   - [1335. Minimum Difficulty of a Job Schedule](#1335-minimum-difficulty-of-a-job-schedule)
+  - [139. Word Break](#139-word-break)
 
 All code written in typescript.
 
@@ -792,5 +793,65 @@ function minDifficulty(jobDifficulty: number[], d: number): number {
 
     const result = _minDif(0, d);
     return result;
+};
+```
+
+### 139. Word Break
+
+Given a string s and a dictionary of strings wordDict, return true if s can be segmented into a space-separated sequence of one or more dictionary words.
+
+Note that the same word in the dictionary may be reused multiple times in the segmentation.
+
+```ts
+class Trie {
+    subTrie: Array<Trie | undefined>;
+    word: string | undefined;
+    constructor() {
+        this.subTrie = new Array(26).fill(undefined);
+        this.word = undefined;
+    }
+
+    insert(index: number, word: string) {
+        if (index === word.length) {
+            this.word = word;
+            return;
+        }
+        const current = word[index];
+        const charIndex = current.charCodeAt(0) - 'a'.charCodeAt(0);
+        if (this.subTrie[charIndex] === undefined) {
+            this.subTrie[charIndex] = new Trie;
+        }
+        this.subTrie[charIndex].insert(index + 1, word);
+    }
+}
+
+function wordBreak(s: string, wordDict: string[]): boolean {
+    const root = new Trie;
+    for (let i = 0; i < wordDict.length; i++) {
+        root.insert(0, wordDict[i]);
+    }
+    const dp = new Map<number, boolean>();
+
+    const _wordBreak = (index: number, lastTrie: Trie): boolean => {
+        if (index === s.length) {
+            return lastTrie.word !== undefined;
+        }
+        const currentChar = s[index];
+        const charIndex = currentChar.charCodeAt(0) - 'a'.charCodeAt(0);
+        const currentTrie = lastTrie.subTrie[charIndex];
+        if (currentTrie === undefined) return false;
+        if (currentTrie.word) {
+            if (dp.get(index + 1) === undefined) {
+                if (_wordBreak(index + 1, root)) {
+                    return true;
+                } else {
+                    dp.set(index + 1, false);
+                }
+            }
+        }
+        return _wordBreak(index + 1, currentTrie);
+    }
+
+    return _wordBreak(0, root);
 };
 ```
